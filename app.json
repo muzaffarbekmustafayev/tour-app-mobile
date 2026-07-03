@@ -1,0 +1,33 @@
+{
+  "expo": {
+    "name": "NavaiTour",
+    "slug": "tour-app-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "navaitour",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.navaitour.app"
+    },
+    "android": {
+      "package": "com.navaitour.app",
+      "edgeToEdgeEnabled": true
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Mehmonxonagacha marshrut chizish uchun joylashuvingiz ishlatiladi."
+        }
+      ],
+      "expo-web-browser"
+    ]
+  }
+}

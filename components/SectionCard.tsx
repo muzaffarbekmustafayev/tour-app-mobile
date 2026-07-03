@@ -6,6 +6,7 @@ import React, { type ReactElement, type ReactNode } from 'react';
 import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 import { useTheme } from '@/hooks/useTheme';
 import { FONT } from '@/constants/theme';
+import { rs } from '@/constants/responsive';
 
 interface SectionCardProps {
   title?: string;
@@ -50,7 +51,7 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: 16,
     borderWidth: 1,
-    padding: 16,
+    padding: rs(18),
     marginBottom: 24,
     shadowColor: '#000',
     shadowOpacity: 0.04,
@@ -67,15 +68,15 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
   },
   iconBox: {
-    width: 32,
-    height: 32,
+    width: rs(34),
+    height: rs(34),
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
   title: {
     flex: 1,
-    fontSize: 13,
+    fontSize: rs(14),
     fontFamily: FONT.black,
     letterSpacing: 0.8,
   },

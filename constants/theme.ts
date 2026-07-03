@@ -24,8 +24,8 @@ export const lightColors = {
   glassBg: 'rgba(255,255,255,0.7)',
   glassBorder: 'rgba(255,255,255,0.9)',
 
-  // linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)
-  gradientMain: ['#4f46e5', '#7c3aed'] as const,
+  // Boyitilgan brend gradienti: indigo → violet → fuchsia
+  gradientMain: ['#4f46e5', '#7c3aed', '#a855f7'] as const,
 
   shimmerBase: 'rgba(203,213,225,0.35)',
   shimmerHighlight: 'rgba(226,232,240,0.75)',
@@ -54,8 +54,8 @@ export const darkColors = {
   glassBg: 'rgba(18,26,47,0.6)',
   glassBorder: 'rgba(255,255,255,0.05)',
 
-  // linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)
-  gradientMain: ['#6366f1', '#8b5cf6'] as const,
+  // Boyitilgan brend gradienti (dark): yorqinroq indigo → violet → lavanda
+  gradientMain: ['#6366f1', '#8b5cf6', '#c084fc'] as const,
 
   shimmerBase: 'rgba(30,41,59,0.45)',
   shimmerHighlight: 'rgba(51,65,85,0.75)',
@@ -66,7 +66,7 @@ export const darkColors = {
 
 export type ThemeColors = {
   [K in keyof typeof lightColors]: (typeof lightColors)[K] extends readonly string[]
-    ? readonly [string, string]
+    ? readonly [string, string, ...string[]]
     : string;
 };
 
@@ -85,5 +85,5 @@ export const FONT = {
   black: 'Outfit_900Black',
 } as const;
 
-/** Amber gradient — attraction tugmalari: linear-gradient(135deg,#f59e0b,#d97706) */
-export const AMBER_GRADIENT = ['#f59e0b', '#d97706'] as const;
+/** Amber gradient — attraction tugmalari: oltin → amber → to'q apelsin */
+export const AMBER_GRADIENT = ['#fbbf24', '#f59e0b', '#ea580c'] as const;

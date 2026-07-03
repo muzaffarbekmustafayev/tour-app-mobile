@@ -33,6 +33,7 @@ import api from '@/services/api';
 import { useAuth, useTheme } from '@/hooks/useTheme';
 import { FONT } from '@/constants/theme';
 import { FALLBACK_DETAIL_IMAGE, imgSrc } from '@/constants/config';
+import { rs } from '@/constants/responsive';
 import { calcAccessibilityScore, getScoreStyle } from '@/utils/accessibilityScore';
 import { SectionCard } from '@/components/SectionCard';
 import { BackButton } from '@/components/ui/BackButton';
@@ -81,6 +82,8 @@ export default function HotelDetailScreen() {
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const galleryWidth = width - 32;
+  // Galereya balandligi ekran kengligiga moslashadi (planshetda kattaroq)
+  const galleryHeight = Math.min(Math.max(Math.round(galleryWidth * 0.7), 260), 440);
 
   const [hotel, setHotel] = useState<Hotel | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -299,7 +302,7 @@ export default function HotelDetailScreen() {
             renderItem={({ item }) => (
               <Image
                 source={{ uri: imgSrc(item, FALLBACK_DETAIL_IMAGE) }}
-                style={{ width: galleryWidth, height: 280 }}
+                style={{ width: galleryWidth, height: galleryHeight }}
                 contentFit="cover"
                 transition={200}
               />
@@ -907,8 +910,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   title: {
-    fontSize: 26,
-    lineHeight: 32,
+    fontSize: rs(28),
+    lineHeight: rs(34),
     fontFamily: FONT.extrabold,
     letterSpacing: -0.5,
     marginBottom: 12,
@@ -921,7 +924,7 @@ const styles = StyleSheet.create({
   },
   addressText: {
     flex: 1,
-    fontSize: 14,
+    fontSize: rs(15),
     fontFamily: FONT.semibold,
   },
   ratingBox: {
@@ -1029,9 +1032,9 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   desc: {
-    fontSize: 14,
+    fontSize: rs(15),
     fontFamily: FONT.regular,
-    lineHeight: 22,
+    lineHeight: rs(24),
   },
   ttsBtn: {
     flexDirection: 'row',
@@ -1099,7 +1102,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   roomName: {
-    fontSize: 18,
+    fontSize: rs(19),
     fontFamily: FONT.extrabold,
     marginBottom: 8,
   },
@@ -1147,7 +1150,7 @@ const styles = StyleSheet.create({
   },
   featureText: {
     flex: 1,
-    fontSize: 13,
+    fontSize: rs(14),
     fontFamily: FONT.medium,
   },
   noData: {
@@ -1193,17 +1196,17 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   reviewComment: {
-    fontSize: 14,
+    fontSize: rs(15),
     fontFamily: FONT.regular,
     fontStyle: 'italic',
-    lineHeight: 20,
+    lineHeight: rs(22),
   },
   contactBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    paddingVertical: 14,
+    paddingVertical: rs(15),
     borderRadius: 12,
     shadowColor: '#6366f1',
     shadowOpacity: 0.4,
@@ -1213,7 +1216,7 @@ const styles = StyleSheet.create({
   },
   contactBtnText: {
     color: '#fff',
-    fontSize: 13,
+    fontSize: rs(14),
     fontFamily: FONT.black,
   },
   emailRow: {

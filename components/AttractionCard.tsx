@@ -10,6 +10,7 @@ import { useRouter } from 'expo-router';
 import { Feather, FontAwesome, MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { useTheme } from '@/hooks/useTheme';
 import { AMBER_GRADIENT, FONT } from '@/constants/theme';
+import { rs } from '@/constants/responsive';
 import { FALLBACK_ATTRACTION_IMAGE, imgSrc } from '@/constants/config';
 import { Shimmer } from '@/components/ui/Shimmer';
 import type { Attraction } from '@/types/models';
@@ -213,17 +214,17 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    padding: 14,
+    padding: rs(16),
   },
   name: {
-    fontSize: 16,
+    fontSize: rs(17),
     fontFamily: FONT.extrabold,
     marginBottom: 4,
   },
   descShort: {
-    fontSize: 12,
+    fontSize: rs(13),
     fontFamily: FONT.regular,
-    lineHeight: 18,
+    lineHeight: rs(19),
     marginBottom: 12,
   },
   chipRow: {
@@ -271,8 +272,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    minHeight: 46,
-    borderRadius: 12,
+    minHeight: rs(50),
+    borderRadius: 14,
     shadowColor: '#d97706',
     shadowOpacity: 0.4,
     shadowRadius: 14,
@@ -281,7 +282,7 @@ const styles = StyleSheet.create({
   },
   ctaText: {
     color: '#fff',
-    fontSize: 14,
+    fontSize: rs(15),
     fontFamily: FONT.bold,
   },
 });

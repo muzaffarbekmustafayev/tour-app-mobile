@@ -29,6 +29,7 @@ import {
 } from '@/services/attractions';
 import { useAuth, useTheme } from '@/hooks/useTheme';
 import { AMBER_GRADIENT, FONT } from '@/constants/theme';
+import { rs } from '@/constants/responsive';
 import { FALLBACK_ATTRACTION_IMAGE, imgSrc } from '@/constants/config';
 import { HotelCard } from '@/components/HotelCard';
 import { SectionCard } from '@/components/SectionCard';
@@ -61,6 +62,8 @@ export default function AttractionDetailScreen() {
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const galleryWidth = width - 32;
+  // Galereya balandligi ekran kengligiga moslashadi (planshetda kattaroq)
+  const galleryHeight = Math.min(Math.max(Math.round(galleryWidth * 0.75), 280), 460);
 
   const [a, setA] = useState<Attraction | null>(null);
   const [nearby, setNearby] = useState<Hotel[]>([]);
@@ -231,7 +234,7 @@ export default function AttractionDetailScreen() {
             renderItem={({ item }) => (
               <Image
                 source={{ uri: imgSrc(item, FALLBACK_ATTRACTION_IMAGE) }}
-                style={{ width: galleryWidth, height: 300 }}
+                style={{ width: galleryWidth, height: galleryHeight }}
                 contentFit="cover"
                 transition={200}
               />
@@ -657,8 +660,8 @@ const styles = StyleSheet.create({
     fontFamily: FONT.bold,
   },
   title: {
-    fontSize: 26,
-    lineHeight: 32,
+    fontSize: rs(28),
+    lineHeight: rs(34),
     fontFamily: FONT.extrabold,
     letterSpacing: -0.5,
     marginBottom: 12,
@@ -765,9 +768,9 @@ const styles = StyleSheet.create({
     fontFamily: FONT.black,
   },
   desc: {
-    fontSize: 14,
+    fontSize: rs(15),
     fontFamily: FONT.regular,
-    lineHeight: 22,
+    lineHeight: rs(24),
   },
   metaChips: {
     flexDirection: 'row',
@@ -831,13 +834,13 @@ const styles = StyleSheet.create({
     color: '#6366f1',
   },
   thingTitle: {
-    fontSize: 14,
+    fontSize: rs(15),
     fontFamily: FONT.bold,
   },
   thingDesc: {
-    fontSize: 12,
+    fontSize: rs(13),
     fontFamily: FONT.regular,
-    lineHeight: 18,
+    lineHeight: rs(19),
     marginTop: 4,
   },
   atmoCard: {
@@ -873,7 +876,7 @@ const styles = StyleSheet.create({
   },
   featureText: {
     flex: 1,
-    fontSize: 13,
+    fontSize: rs(14),
     fontFamily: FONT.medium,
   },
   reviewFormCard: {

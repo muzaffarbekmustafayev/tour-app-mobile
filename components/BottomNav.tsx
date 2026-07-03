@@ -11,6 +11,7 @@ import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth, useTheme } from '@/hooks/useTheme';
 import { FONT } from '@/constants/theme';
+import { rs } from '@/constants/responsive';
 import type { UserRole } from '@/types/models';
 
 type FeatherName = keyof typeof Feather.glyphMap;
@@ -110,7 +111,7 @@ export function BottomNav({ state, navigation }: TabBarProps) {
             <>
               <Feather
                 name={item.icon}
-                size={21}
+                size={rs(22)}
                 color={active ? '#fff' : colors.textMuted}
               />
               <Text
@@ -168,10 +169,10 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   item: {
-    minWidth: 56,
-    paddingTop: 7,
-    paddingBottom: 6,
-    paddingHorizontal: 10,
+    minWidth: rs(58),
+    paddingTop: rs(8),
+    paddingBottom: rs(7),
+    paddingHorizontal: rs(12),
     borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
@@ -185,7 +186,7 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   label: {
-    fontSize: 9.5,
+    fontSize: rs(10),
     fontFamily: FONT.bold,
     letterSpacing: 0.2,
   },

@@ -16,6 +16,7 @@ import {
 } from '@expo/vector-icons';
 import { useAuth, useTheme } from '@/hooks/useTheme';
 import { FONT } from '@/constants/theme';
+import { rs } from '@/constants/responsive';
 import { FALLBACK_IMAGE, imgSrc } from '@/constants/config';
 import { calcAccessibilityScore, getScoreStyle } from '@/utils/accessibilityScore';
 import { Shimmer } from '@/components/ui/Shimmer';
@@ -368,10 +369,10 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    padding: 14,
+    padding: rs(16),
   },
   name: {
-    fontSize: 16,
+    fontSize: rs(17),
     fontFamily: FONT.extrabold,
     marginBottom: 4,
   },
@@ -383,13 +384,13 @@ const styles = StyleSheet.create({
   },
   locationText: {
     flex: 1,
-    fontSize: 12,
+    fontSize: rs(13),
     fontFamily: FONT.medium,
   },
   descShort: {
-    fontSize: 12,
+    fontSize: rs(13),
     fontFamily: FONT.regular,
-    lineHeight: 18,
+    lineHeight: rs(19),
     marginBottom: 12,
   },
   badgeRow: {
@@ -399,15 +400,15 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   badgeIcon: {
-    width: 28,
-    height: 28,
+    width: rs(30),
+    height: rs(30),
     borderRadius: 8,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
   badgeMore: {
-    fontSize: 10,
+    fontSize: rs(11),
     fontFamily: FONT.black,
     color: '#6366f1',
   },
@@ -426,7 +427,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(99,102,241,0.15)',
   },
   amenityText: {
-    fontSize: 10,
+    fontSize: rs(11),
     fontFamily: FONT.bold,
     color: '#6366f1',
   },
@@ -440,8 +441,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    minHeight: 46,
-    borderRadius: 12,
+    minHeight: rs(50),
+    borderRadius: 14,
     shadowColor: '#6366f1',
     shadowOpacity: 0.4,
     shadowRadius: 14,
@@ -450,7 +451,7 @@ const styles = StyleSheet.create({
   },
   ctaText: {
     color: '#fff',
-    fontSize: 14,
+    fontSize: rs(15),
     fontFamily: FONT.bold,
   },
 });

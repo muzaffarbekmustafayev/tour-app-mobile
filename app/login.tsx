@@ -30,6 +30,7 @@ import * as Google from 'expo-auth-session/providers/google';
 import { AuthContext } from '@/context/AuthContext';
 import { useTheme } from '@/hooks/useTheme';
 import { FONT } from '@/constants/theme';
+import { rs } from '@/constants/responsive';
 import { BackButton } from '@/components/ui/BackButton';
 
 // Brauzerdan qaytganda auth sessiyani yakunlash (expo-auth-session talabi)
@@ -387,12 +388,12 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   title: {
-    fontSize: 24,
+    fontSize: rs(26),
     fontFamily: FONT.black,
     marginBottom: 6,
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: rs(15),
     fontFamily: FONT.medium,
     textAlign: 'center',
   },
@@ -471,10 +472,10 @@ const styles = StyleSheet.create({
   input: {
     paddingLeft: 48,
     paddingRight: 48,
-    paddingVertical: 14,
+    paddingVertical: rs(15),
     borderRadius: 16,
     borderWidth: 1.5,
-    fontSize: 15,
+    fontSize: rs(16),
     fontFamily: FONT.semibold,
   },
   eyeBtn: {
@@ -496,7 +497,7 @@ const styles = StyleSheet.create({
   },
   submitBtnText: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: rs(17),
     fontFamily: FONT.black,
   },
   footerText: {

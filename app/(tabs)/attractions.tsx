@@ -10,6 +10,7 @@ import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { fetchAttractions, DISTRICTS } from '@/services/attractions';
 import { useTheme } from '@/hooks/useTheme';
 import { AMBER_GRADIENT, FONT } from '@/constants/theme';
+import { CONTENT_MAX_WIDTH, GRID_COLUMNS, GRID_ITEM_WIDTH, rs } from '@/constants/responsive';
 import { AttractionCard } from '@/components/AttractionCard';
 import { BackButton } from '@/components/ui/BackButton';
 import { Shimmer } from '@/components/ui/Shimmer';
@@ -70,6 +71,9 @@ export default function AttractionsScreen() {
         paddingTop: insets.top + 24,
         paddingHorizontal: 16,
         paddingBottom: 112,
+        width: '100%',
+        maxWidth: CONTENT_MAX_WIDTH,
+        alignSelf: 'center',
       }}
       showsVerticalScrollIndicator={false}
       refreshControl={
@@ -151,15 +155,19 @@ export default function AttractionsScreen() {
       )}
 
       {loading ? (
-        <View style={{ gap: 16 }}>
+        <View style={styles.grid}>
           {[1, 2, 3].map((i) => (
-            <Skeleton key={i} />
+            <View key={i} style={styles.gridItem}>
+              <Skeleton />
+            </View>
           ))}
         </View>
       ) : items.length > 0 ? (
-        <View style={{ gap: 16 }}>
+        <View style={styles.grid}>
           {items.map((a) => (
-            <AttractionCard key={a._id} attraction={a} />
+            <View key={a._id} style={styles.gridItem}>
+              <AttractionCard attraction={a} />
+            </View>
           ))}
         </View>
       ) : !error ? (
@@ -183,14 +191,22 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   title: {
-    fontSize: 24,
+    fontSize: rs(26),
     fontFamily: FONT.black,
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: rs(15),
     fontFamily: FONT.medium,
-    lineHeight: 20,
+    lineHeight: rs(21),
     marginBottom: 24,
+  },
+  grid: {
+    gap: 16,
+    flexDirection: GRID_COLUMNS > 1 ? 'row' : 'column',
+    flexWrap: 'wrap',
+  },
+  gridItem: {
+    width: GRID_ITEM_WIDTH,
   },
   chipRow: {
     flexDirection: 'row',
@@ -213,11 +229,11 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
   },
   chipText: {
-    fontSize: 14,
+    fontSize: rs(15),
     fontFamily: FONT.bold,
   },
   chipTextActive: {
-    fontSize: 14,
+    fontSize: rs(15),
     fontFamily: FONT.bold,
     color: '#fff',
   },

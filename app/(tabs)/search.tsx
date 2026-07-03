@@ -20,6 +20,7 @@ import { Feather, MaterialCommunityIcons, MaterialIcons } from '@expo/vector-ico
 import api from '@/services/api';
 import { useTheme } from '@/hooks/useTheme';
 import { FONT } from '@/constants/theme';
+import { GRID_COLUMNS, rs } from '@/constants/responsive';
 import { HotelCard } from '@/components/HotelCard';
 import { BackButton } from '@/components/ui/BackButton';
 import { Shimmer } from '@/components/ui/Shimmer';
@@ -288,7 +289,18 @@ export default function SearchScreen() {
         // skeletonlar faqat birinchi yuklanishda chiqadi
         data={hotels}
         keyExtractor={(item) => item._id}
-        renderItem={({ item }) => <HotelCard hotel={item} />}
+        renderItem={({ item }) =>
+          GRID_COLUMNS > 1 ? (
+            <View style={{ flex: 1 / GRID_COLUMNS }}>
+              <HotelCard hotel={item} />
+            </View>
+          ) : (
+            <HotelCard hotel={item} />
+          )
+        }
+        {...(GRID_COLUMNS > 1
+          ? { numColumns: GRID_COLUMNS, columnWrapperStyle: { gap: 16 } }
+          : {})}
         ListHeaderComponent={listHeader}
         contentContainerStyle={styles.listContent}
         ItemSeparatorComponent={() => <View style={{ height: 16 }} />}
@@ -530,12 +542,12 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   searchInput: {
-    height: 50,
+    height: rs(52),
     borderRadius: 32,
     borderWidth: 1,
     paddingLeft: 44,
     paddingRight: 20,
-    fontSize: 15,
+    fontSize: rs(16),
     fontFamily: FONT.bold,
   },
   filterBtn: {
@@ -543,8 +555,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    height: 50,
-    minWidth: 50,
+    height: rs(52),
+    minWidth: rs(52),
     paddingHorizontal: 14,
     borderRadius: 16,
     borderWidth: 1,
@@ -562,12 +574,12 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   resultTitle: {
-    fontSize: 20,
+    fontSize: rs(22),
     fontFamily: FONT.black,
-    lineHeight: 26,
+    lineHeight: rs(28),
   },
   resultCount: {
-    fontSize: 14,
+    fontSize: rs(14),
     fontFamily: FONT.medium,
     marginTop: 4,
   },
@@ -720,7 +732,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   accordionTitle: {
-    fontSize: 14,
+    fontSize: rs(15),
     fontFamily: FONT.bold,
   },
   accordionBody: {
@@ -745,9 +757,9 @@ const styles = StyleSheet.create({
   },
   checkLabel: {
     flex: 1,
-    fontSize: 14,
+    fontSize: rs(15),
     fontFamily: FONT.semibold,
-    lineHeight: 18,
+    lineHeight: rs(19),
   },
   ratingSection: {
     borderRadius: 20,
@@ -777,13 +789,13 @@ const styles = StyleSheet.create({
     fontFamily: FONT.semibold,
   },
   applyBtn: {
-    paddingVertical: 14,
+    paddingVertical: rs(15),
     borderRadius: 16,
     alignItems: 'center',
   },
   applyBtnText: {
     color: '#fff',
-    fontSize: 14,
+    fontSize: rs(15),
     fontFamily: FONT.extrabold,
   },
 });

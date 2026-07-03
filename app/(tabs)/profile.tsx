@@ -11,6 +11,7 @@ import api from '@/services/api';
 import { AuthContext } from '@/context/AuthContext';
 import { useTheme } from '@/hooks/useTheme';
 import { FONT } from '@/constants/theme';
+import { rs } from '@/constants/responsive';
 import { BackButton } from '@/components/ui/BackButton';
 import { Loader } from '@/components/ui/Loader';
 import type { User, UserRole } from '@/types/models';
@@ -263,7 +264,7 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   headerTitle: {
-    fontSize: 18,
+    fontSize: rs(19),
     fontFamily: FONT.bold,
     textAlign: 'center',
   },
@@ -272,9 +273,9 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: rs(86),
+    height: rs(86),
+    borderRadius: rs(43),
     borderWidth: 4,
     alignItems: 'center',
     justifyContent: 'center',
@@ -286,16 +287,16 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   avatarText: {
-    fontSize: 30,
+    fontSize: rs(32),
     fontFamily: FONT.black,
   },
   name: {
-    fontSize: 20,
+    fontSize: rs(22),
     fontFamily: FONT.bold,
     marginBottom: 4,
   },
   contact: {
-    fontSize: 14,
+    fontSize: rs(15),
     fontFamily: FONT.medium,
     marginBottom: 12,
   },
@@ -338,7 +339,7 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   statValue: {
-    fontSize: 14,
+    fontSize: rs(15),
     fontFamily: FONT.bold,
   },
   listCard: {
@@ -365,7 +366,7 @@ const styles = StyleSheet.create({
   listLabel: {
     flex: 1,
     marginLeft: 12,
-    fontSize: 14,
+    fontSize: rs(15),
     fontFamily: FONT.semibold,
   },
   switchTrack: {

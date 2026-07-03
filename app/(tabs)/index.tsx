@@ -25,6 +25,7 @@ import api from '@/services/api';
 import { fetchAttractions } from '@/services/attractions';
 import { useTheme } from '@/hooks/useTheme';
 import { FONT } from '@/constants/theme';
+import { CONTENT_MAX_WIDTH, GRID_ITEM_WIDTH, GRID_COLUMNS, rs } from '@/constants/responsive';
 import { imgSrc } from '@/constants/config';
 import { HotelCard } from '@/components/HotelCard';
 import { AttractionCard } from '@/components/AttractionCard';
@@ -186,8 +187,7 @@ export default function HomeScreen() {
           />
 
           {/* Bezak doiralar */}
-          <View style={[styles.orb, styles.orbTop]} pointerEvents="none" />
-          <View style={[styles.orb, styles.orbBottom]} pointerEvents="none" />
+
 
           <View style={styles.heroContent}>
             {/* Joylashuv pilli */}
@@ -358,7 +358,9 @@ export default function HomeScreen() {
               </Text>
               <View style={styles.cardGrid}>
                 {attractions.slice(0, 3).map((a) => (
-                  <AttractionCard key={a._id} attraction={a} />
+                  <View key={a._id} style={styles.gridItem}>
+                    <AttractionCard attraction={a} />
+                  </View>
                 ))}
               </View>
             </View>
@@ -508,13 +510,17 @@ export default function HomeScreen() {
             {loading ? (
               <View style={styles.cardGrid}>
                 {[1, 2, 3, 4].map((i) => (
-                  <SkeletonCard key={i} />
+                  <View key={i} style={styles.gridItem}>
+                    <SkeletonCard />
+                  </View>
                 ))}
               </View>
             ) : hotels.length > 0 ? (
               <View style={styles.cardGrid}>
                 {hotels.map((hotel) => (
-                  <HotelCard key={hotel._id} hotel={hotel} />
+                  <View key={hotel._id} style={styles.gridItem}>
+                    <HotelCard hotel={hotel} />
+                  </View>
                 ))}
               </View>
             ) : !error ? (
@@ -563,24 +569,7 @@ const styles = StyleSheet.create({
     width: '100%',
     overflow: 'hidden',
   },
-  orb: {
-    position: 'absolute',
-    borderRadius: 999,
-  },
-  orbTop: {
-    top: 40,
-    right: -40,
-    width: 320,
-    height: 320,
-    backgroundColor: 'rgba(139,92,246,0.22)',
-  },
-  orbBottom: {
-    bottom: 128,
-    left: -80,
-    width: 288,
-    height: 288,
-    backgroundColor: 'rgba(251,191,36,0.12)',
-  },
+
   heroContent: {
     ...StyleSheet.absoluteFillObject,
     alignItems: 'center',
@@ -625,12 +614,12 @@ const styles = StyleSheet.create({
     textShadowRadius: 24,
   },
   heroSubtitle: {
-    color: 'rgba(255,255,255,0.75)',
-    fontSize: 14,
-    lineHeight: 22,
+    color: 'rgba(255,255,255,0.78)',
+    fontSize: rs(15),
+    lineHeight: rs(23),
     fontFamily: FONT.medium,
     textAlign: 'center',
-    maxWidth: 320,
+    maxWidth: rs(340),
     marginBottom: 24,
   },
   searchShortcut: {
@@ -661,8 +650,8 @@ const styles = StyleSheet.create({
   },
   searchShortcutText: {
     flex: 1,
-    color: 'rgba(255,255,255,0.8)',
-    fontSize: 14,
+    color: 'rgba(255,255,255,0.85)',
+    fontSize: rs(15),
     fontFamily: FONT.bold,
   },
   bottomWave: {
@@ -674,6 +663,10 @@ const styles = StyleSheet.create({
   },
   main: {
     paddingHorizontal: 16,
+    // Planshetlarda kontent cho'zilib ketmasin
+    width: '100%',
+    maxWidth: CONTENT_MAX_WIDTH,
+    alignSelf: 'center',
   },
   districtGrid: {
     flexDirection: 'row',
@@ -699,12 +692,12 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   districtName: {
-    fontSize: 15,
+    fontSize: rs(16),
     fontFamily: FONT.black,
     textAlign: 'center',
   },
   districtCount: {
-    fontSize: 9,
+    fontSize: rs(9.5),
     fontFamily: FONT.bold,
     letterSpacing: 0.9,
   },
@@ -724,11 +717,11 @@ const styles = StyleSheet.create({
     flexShrink: 1,
   },
   sectionTitle: {
-    fontSize: 20,
+    fontSize: rs(21),
     fontFamily: FONT.black,
   },
   sectionSub: {
-    fontSize: 12,
+    fontSize: rs(13),
     fontFamily: FONT.medium,
     marginTop: -14,
     marginBottom: 20,
@@ -739,7 +732,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   seeAllText: {
-    fontSize: 14,
+    fontSize: rs(15),
     fontFamily: FONT.bold,
     color: '#6366f1',
   },
@@ -751,13 +744,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingHorizontal: rs(18),
+    paddingVertical: rs(12),
     borderRadius: 16,
     borderWidth: 1.5,
   },
   categoryText: {
-    fontSize: 14,
+    fontSize: rs(15),
     fontFamily: FONT.bold,
   },
   mapLink: {
@@ -784,16 +777,22 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   mapLinkTitle: {
-    fontSize: 14,
+    fontSize: rs(16),
     fontFamily: FONT.extrabold,
     marginBottom: 2,
   },
   mapLinkSub: {
-    fontSize: 12,
+    fontSize: rs(13),
     fontFamily: FONT.medium,
   },
+  // Web `hotel-grid` ekvivalenti: telefonda 1, keng ekranlarda 2-3 ustun
   cardGrid: {
     gap: 16,
+    flexDirection: GRID_COLUMNS > 1 ? 'row' : 'column',
+    flexWrap: 'wrap',
+  },
+  gridItem: {
+    width: GRID_ITEM_WIDTH,
   },
   districtPanel: {
     borderRadius: 24,
@@ -839,20 +838,20 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   miniCard: {
-    width: 176,
+    width: rs(190),
     borderRadius: 16,
     borderWidth: 1,
     overflow: 'hidden',
   },
   miniCardImage: {
     width: '100%',
-    height: 96,
+    height: rs(104),
   },
   miniCardBody: {
-    padding: 10,
+    padding: rs(11),
   },
   miniCardName: {
-    fontSize: 14,
+    fontSize: rs(15),
     fontFamily: FONT.bold,
   },
   miniCardMeta: {

@@ -13,6 +13,7 @@ import api from '@/services/api';
 import { AuthContext } from '@/context/AuthContext';
 import { useTheme } from '@/hooks/useTheme';
 import { FONT } from '@/constants/theme';
+import { CONTENT_MAX_WIDTH, GRID_COLUMNS, GRID_ITEM_WIDTH, rs } from '@/constants/responsive';
 import { imgSrc } from '@/constants/config';
 import { BackButton } from '@/components/ui/BackButton';
 import { Shimmer } from '@/components/ui/Shimmer';
@@ -182,6 +183,9 @@ export default function FavoritesScreen() {
         paddingTop: insets.top + 16,
         paddingHorizontal: 16,
         paddingBottom: 128,
+        width: '100%',
+        maxWidth: CONTENT_MAX_WIDTH,
+        alignSelf: 'center',
       }}
       showsVerticalScrollIndicator={false}
       refreshControl={
@@ -211,18 +215,22 @@ export default function FavoritesScreen() {
 
       {/* Yuklanish skeletlari */}
       {loading && (
-        <View style={{ gap: 24 }}>
+        <View style={styles.grid}>
           {[1, 2, 3].map((i) => (
-            <SkeletonCard key={i} />
+            <View key={i} style={styles.gridItem}>
+              <SkeletonCard />
+            </View>
           ))}
         </View>
       )}
 
       {/* Kartalar */}
       {!loading && hotels.length > 0 && (
-        <View style={{ gap: 24 }}>
+        <View style={styles.grid}>
           {hotels.map((hotel) => (
-            <FavCard key={hotel._id} hotel={hotel} onRemove={handleRemove} />
+            <View key={hotel._id} style={styles.gridItem}>
+              <FavCard hotel={hotel} onRemove={handleRemove} />
+            </View>
           ))}
         </View>
       )}
@@ -271,13 +279,21 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   title: {
-    fontSize: 30,
+    fontSize: rs(31),
     fontFamily: FONT.black,
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: rs(14),
     fontFamily: FONT.medium,
     marginTop: 4,
+  },
+  grid: {
+    gap: 24,
+    flexDirection: GRID_COLUMNS > 1 ? 'row' : 'column',
+    flexWrap: 'wrap',
+  },
+  gridItem: {
+    width: GRID_ITEM_WIDTH,
   },
   countChip: {
     paddingHorizontal: 12,
@@ -359,7 +375,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   cardName: {
-    fontSize: 16,
+    fontSize: rs(17),
     fontFamily: FONT.extrabold,
     marginBottom: 4,
   },
@@ -404,12 +420,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    height: 44,
+    height: rs(48),
     borderRadius: 16,
   },
   ctaText: {
     color: '#fff',
-    fontSize: 14,
+    fontSize: rs(15),
     fontFamily: FONT.bold,
   },
   empty: {

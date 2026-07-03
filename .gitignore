@@ -15,8 +15,17 @@ expo-env.d.ts
 # Metro
 .metro-health-check*
 
-# ENV
+# ── Muhit o'zgaruvchilari (MAXFIY) ───────────────────────────
+# ⚠️  Bu fayllarni HECH QACHON commit qilmang!
+.env
+.env.local
 .env*.local
+# ✅ .env.example COMMIT qilinadi — namuna sifatida
+!.env.example
+
+# Native build papkalari (prebuild / expo run natijasi)
+android/
+ios/
 
 # macOS
 .DS_Store

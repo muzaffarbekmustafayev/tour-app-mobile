@@ -1,9 +1,15 @@
 {
   "expo": {
-    "name": "NavaiTour",
+    "name": "Tourism for Everyone",
     "slug": "tour-app-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
+    "icon": "./assets/images/hero.png",
+    "splash": {
+      "image": "./assets/images/hero.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
     "scheme": "navaitour",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -13,7 +19,16 @@
     },
     "android": {
       "package": "com.navaitour.app",
-      "edgeToEdgeEnabled": true
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/hero.png",
+        "backgroundColor": "#ffffff"
+      },
+      "edgeToEdgeEnabled": true,
+      "permissions": [
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -28,6 +43,12 @@
         }
       ],
       "expo-web-browser"
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "ce44d59a-6e4c-4f0e-b205-a79e583dc7d1"
+      }
+    }
   }
 }

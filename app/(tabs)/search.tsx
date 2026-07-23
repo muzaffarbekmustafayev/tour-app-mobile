@@ -22,9 +22,11 @@ import { useTheme } from '@/hooks/useTheme';
 import { FONT } from '@/constants/theme';
 import { GRID_COLUMNS, rs } from '@/constants/responsive';
 import { HotelCard } from '@/components/HotelCard';
+import { AttractionCard } from '@/components/AttractionCard';
+import { fetchAttractions } from '@/services/attractions';
 import { BackButton } from '@/components/ui/BackButton';
 import { Shimmer } from '@/components/ui/Shimmer';
-import type { Hotel } from '@/types/models';
+import type { Hotel, Attraction } from '@/types/models';
 
 /* ── Filtr guruhlari (web FILTER_GROUPS bilan bir xil) ── */
 interface FilterOption {
@@ -145,10 +147,13 @@ export default function SearchScreen() {
   const insets = useSafeAreaInsets();
 
   const [hotels, setHotels] = useState<Hotel[]>([]);
+  const [attractions, setAttractions] = useState<Attraction[]>([]);
   const [loading, setLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
   const [totalHotels, setTotalHotels] = useState(0);
+  const [totalAttractions, setTotalAttractions] = useState(0);
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({ mobility: true });
+  const [activeTab, setActiveTab] = useState<'hotels' | 'attractions'>('attractions');
 
   const [filters, setFilters] = useState<Filters>({
     search: typeof params.q === 'string' ? params.q : '',
@@ -170,7 +175,7 @@ export default function SearchScreen() {
     }));
   }, [params.q, params.city, params.accessibility]);
 
-  const fetchHotels = useCallback(async (f: Filters) => {
+  const fetchData = useCallback(async (f: Filters) => {
     setLoading(true);
     try {
       const p = new URLSearchParams();
@@ -185,17 +190,36 @@ export default function SearchScreen() {
         }
       });
       p.set('limit', '50');
-      const res = await api.get(`/hotels?${p.toString()}`);
-      const data: Hotel[] = Array.isArray(res.data)
-        ? res.data
-        : res.data.data || res.data.hotels || [];
-      const total: number = res.data.total ?? data.length;
-      setHotels(data);
-      setTotalHotels(total);
+
+      const aParams: Record<string, string> = { limit: '50' };
+      if (f.search) aParams.search = f.search;
+      if (f.city) aParams.district = f.city;
+
+      const [resHotels, resAttr] = await Promise.all([
+        api.get(`/hotels?${p.toString()}`),
+        fetchAttractions(aParams).catch(() => ({ data: [], total: 0 }))
+      ]);
+
+      const hData: Hotel[] = Array.isArray(resHotels.data)
+        ? resHotels.data
+        : resHotels.data.data || resHotels.data.hotels || [];
+      const hTotal: number = resHotels.data.total ?? hData.length;
+      
+      const aData: Attraction[] = Array.isArray(resAttr) 
+        ? resAttr 
+        : (resAttr as any).data || [];
+      const aTotal: number = (resAttr as any).total ?? aData.length;
+
+      setHotels(hData);
+      setTotalHotels(hTotal);
+      setAttractions(aData);
+      setTotalAttractions(aTotal);
     } catch (err) {
       if (__DEV__) console.error('[Search] Qidiruv xatosi:', (err as Error).message);
       setHotels([]);
       setTotalHotels(0);
+      setAttractions([]);
+      setTotalAttractions(0);
     } finally {
       setLoading(false);
     }
@@ -203,9 +227,9 @@ export default function SearchScreen() {
 
   // Filtr o'zgarganda qidirish (matn uchun 400ms debounce)
   useEffect(() => {
-    const t = setTimeout(() => fetchHotels(filters), 400);
+    const t = setTimeout(() => fetchData(filters), 400);
     return () => clearTimeout(t);
-  }, [filters, fetchHotels]);
+  }, [filters, fetchData]);
 
   const set = (key: keyof Filters, val: string) => setFilters((p) => ({ ...p, [key]: val }));
   const toggleAccess = (key: string) =>
@@ -221,8 +245,8 @@ export default function SearchScreen() {
   const title = filters.search
     ? `"${filters.search}" natijalari`
     : filters.city
-      ? `${filters.city} mehmonxonalari`
-      : 'Barcha mehmonxonalar';
+      ? `${filters.city} natijalari`
+      : 'Barcha natijalar';
 
   const listHeader = useMemo(
     () => (
@@ -235,7 +259,7 @@ export default function SearchScreen() {
             <TextInput
               value={filters.search}
               onChangeText={(v) => set('search', v)}
-              placeholder="Mehmonxona yoki shahar..."
+              placeholder="Joy yoki shahar..."
               placeholderTextColor={colors.textMuted}
               style={[
                 styles.searchInput,
@@ -247,18 +271,38 @@ export default function SearchScreen() {
               ]}
             />
           </View>
-          <Pressable
-            onPress={() => setShowFilters(true)}
-            style={[
-              styles.filterBtn,
-              {
-                backgroundColor: activeCount > 0 ? '#6366f1' : colors.bgCard,
-                borderColor: colors.border,
-              },
-            ]}
+          {activeTab === 'hotels' && (
+            <Pressable
+              onPress={() => setShowFilters(true)}
+              style={[
+                styles.filterBtn,
+                {
+                  backgroundColor: activeCount > 0 ? '#6366f1' : colors.bgCard,
+                  borderColor: colors.border,
+                },
+              ]}
+            >
+              <Feather name="filter" size={16} color={activeCount > 0 ? '#fff' : colors.textMain} />
+              {activeCount > 0 && <Text style={styles.filterCount}>{activeCount}</Text>}
+            </Pressable>
+          )}
+        </View>
+
+        {/* ── Tabs ── */}
+        <View style={styles.tabContainer}>
+          <Pressable 
+            style={[styles.tabBtn, activeTab === 'attractions' && styles.tabBtnActive, { backgroundColor: activeTab === 'attractions' ? colors.primary : 'transparent' }]}
+            onPress={() => setActiveTab('attractions')}
           >
-            <Feather name="filter" size={16} color={activeCount > 0 ? '#fff' : colors.textMain} />
-            {activeCount > 0 && <Text style={styles.filterCount}>{activeCount}</Text>}
+            <MaterialCommunityIcons name="bank" size={16} color={activeTab === 'attractions' ? '#fff' : colors.textMuted} />
+            <Text style={[styles.tabText, { color: activeTab === 'attractions' ? '#fff' : colors.textMuted }]} numberOfLines={1} adjustsFontSizeToFit>Tarixiy joylar</Text>
+          </Pressable>
+          <Pressable 
+            style={[styles.tabBtn, activeTab === 'hotels' && styles.tabBtnActive, { backgroundColor: activeTab === 'hotels' ? colors.primary : 'transparent' }]}
+            onPress={() => setActiveTab('hotels')}
+          >
+            <Feather name="home" size={16} color={activeTab === 'hotels' ? '#fff' : colors.textMuted} />
+            <Text style={[styles.tabText, { color: activeTab === 'hotels' ? '#fff' : colors.textMuted }]} numberOfLines={1} adjustsFontSizeToFit>Mehmonxonalar</Text>
           </Pressable>
         </View>
 
@@ -267,10 +311,10 @@ export default function SearchScreen() {
           <View style={{ flex: 1 }}>
             <Text style={[styles.resultTitle, { color: colors.textMain }]}>{title}</Text>
             <Text style={[styles.resultCount, { color: colors.textMuted }]}>
-              {loading ? 'Qidirilmoqda...' : `${totalHotels} ta mehmonxona topildi`}
+              {loading ? 'Qidirilmoqda...' : `${activeTab === 'hotels' ? totalHotels : totalAttractions} ta ${activeTab === 'hotels' ? 'mehmonxona' : 'joy'} topildi`}
             </Text>
           </View>
-          {activeCount > 0 && (
+          {activeCount > 0 && activeTab === 'hotels' && (
             <Pressable onPress={clearFilters} style={styles.clearChip}>
               <Feather name="x" size={14} color="#f43f5e" />
               <Text style={styles.clearChipText}>Filtrlarni tozalash</Text>
@@ -279,7 +323,7 @@ export default function SearchScreen() {
         </View>
       </View>
     ),
-    [colors, filters.search, activeCount, title, loading, totalHotels],
+    [colors, filters.search, activeCount, title, loading, totalHotels, totalAttractions, activeTab],
   );
 
   return (
@@ -287,15 +331,15 @@ export default function SearchScreen() {
       <FlatList
         // Qayta qidiruv paytida eski natijalar ko'rinib turadi (lipillamaydi) —
         // skeletonlar faqat birinchi yuklanishda chiqadi
-        data={hotels}
+        data={activeTab === 'hotels' ? hotels : attractions}
         keyExtractor={(item) => item._id}
         renderItem={({ item }) =>
           GRID_COLUMNS > 1 ? (
             <View style={{ flex: 1 / GRID_COLUMNS }}>
-              <HotelCard hotel={item} />
+              {activeTab === 'hotels' ? <HotelCard hotel={item as Hotel} /> : <AttractionCard attraction={item as Attraction} />}
             </View>
           ) : (
-            <HotelCard hotel={item} />
+            activeTab === 'hotels' ? <HotelCard hotel={item as Hotel} /> : <AttractionCard attraction={item as Attraction} />
           )
         }
         {...(GRID_COLUMNS > 1
@@ -529,8 +573,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
     marginBottom: 20,
-    // O'ng yuqoridagi global tema tugmasi (ThemeToggle) bilan to'qnashmaslik uchun
-    paddingRight: 52,
   },
   searchWrap: {
     flex: 1,
@@ -582,6 +624,35 @@ const styles = StyleSheet.create({
     fontSize: rs(14),
     fontFamily: FONT.medium,
     marginTop: 4,
+  },
+  tabContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 4,
+    borderRadius: 20,
+    backgroundColor: 'rgba(148, 163, 184, 0.1)',
+    marginBottom: 20,
+  },
+  tabBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 10,
+    paddingHorizontal: 4,
+    borderRadius: 16,
+  },
+  tabBtnActive: {
+    shadowColor: '#6366f1',
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 4,
+  },
+  tabText: {
+    fontSize: rs(13),
+    fontFamily: FONT.semibold,
   },
   clearChip: {
     flexDirection: 'row',

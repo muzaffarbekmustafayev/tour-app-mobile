@@ -4,7 +4,7 @@
  */
 import { useContext } from 'react';
 import { AuthContext } from '@/context/AuthContext';
-import { lightColors, darkColors, type ThemeColors } from '@/constants/theme';
+import { lightColors, type ThemeColors } from '@/constants/theme';
 
 interface Theme {
   colors: ThemeColors;
@@ -15,8 +15,8 @@ interface Theme {
 export function useTheme(): Theme {
   const { darkMode, setDarkMode } = useContext(AuthContext);
   return {
-    colors: (darkMode ? darkColors : lightColors) as ThemeColors,
-    darkMode,
+    colors: lightColors as ThemeColors,
+    darkMode: false, // Force light mode
     setDarkMode,
   };
 }

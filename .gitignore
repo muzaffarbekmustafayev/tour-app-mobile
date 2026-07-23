@@ -1,31 +1,23 @@
 node_modules/
 .expo/
 dist/
-web-build/
-expo-env.d.ts
-
-# Native
-*.orig.*
+npm-debug.*
 *.jks
 *.p8
 *.p12
 *.key
 *.mobileprovision
-
-# Metro
-.metro-health-check*
-
-# ── Muhit o'zgaruvchilari (MAXFIY) ───────────────────────────
-# ⚠️  Bu fayllarni HECH QACHON commit qilmang!
-.env
-.env.local
-.env*.local
-# ✅ .env.example COMMIT qilinadi — namuna sifatida
-!.env.example
-
-# Native build papkalari (prebuild / expo run natijasi)
-android/
-ios/
+*.orig.*
+web-build/
 
 # macOS
 .DS_Store
+
+# Android/iOS native ignores (since it's an Expo project, we typically ignore android/ios if they are not generated)
+# android/
+# ios/
+
+# Env
+.env
+.env.*
+!.env.example

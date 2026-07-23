@@ -14,7 +14,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
@@ -69,9 +69,9 @@ export default function RegisterScreen() {
   const inputStyle = (name: string) => [
     styles.input,
     {
-      backgroundColor:
-        focused === name ? 'rgba(99,102,241,0.08)' : 'rgba(99,102,241,0.05)',
-      borderColor: focused === name ? '#6366F1' : colors.border,
+      backgroundColor: colors.bgCard,
+      borderColor: focused === name ? colors.primary : colors.border,
+      borderWidth: focused === name ? 1.5 : 1,
       color: colors.textMain,
     },
   ];
@@ -83,8 +83,8 @@ export default function RegisterScreen() {
     placeholder: string,
     keyboardType: 'default' | 'email-address' | 'phone-pad' = 'default',
   ) => (
-    <View style={{ marginBottom: 16 }}>
-      <Text style={[styles.label, { color: colors.textMuted }]}>{label}</Text>
+    <View style={{ marginBottom: 4 }}>
+      <Text style={[styles.label, { color: colors.textMain }]}>{label}</Text>
       <View style={styles.inputWrap}>
         <Feather name={icon} size={20} color={colors.textMuted} style={styles.inputIcon} />
         <TextInput
@@ -107,41 +107,27 @@ export default function RegisterScreen() {
       style={{ flex: 1, backgroundColor: colors.bgMain }}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <ScrollView
-        contentContainerStyle={[
+      <View
+        style={[
           styles.container,
-          { paddingTop: insets.top + 16, paddingBottom: insets.bottom + 24 },
+          { paddingTop: insets.top + 16, paddingBottom: insets.bottom + 16 },
         ]}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
       >
-        {/* Bezak bloblar */}
-        <View style={[styles.blob, styles.blobTop]} pointerEvents="none" />
-        <View style={[styles.blob, styles.blobBottom]} pointerEvents="none" />
-
-        <View style={{ marginBottom: 20 }}>
+        {/* Back button — chap taraf tepada, absolute */}
+        <View style={[styles.backBtnWrap, { top: insets.top + 12 }]}>
           <BackButton />
         </View>
 
-        <View style={[styles.card, { backgroundColor: colors.bgCard, borderColor: colors.border }]}>
-          {/* Brend */}
-          <View style={styles.brand}>
-            <LinearGradient
-              colors={colors.gradientMain}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.brandIcon}
-            >
-              <Feather name="map-pin" size={28} color="#fff" />
-            </LinearGradient>
-            <Text style={[styles.title, { color: colors.textMain }]}>
-              {APP_NAME}'ga qo'shiling
-            </Text>
-            <Text style={[styles.subtitle, { color: colors.textMuted }]}>
-              Sevimli mehmonxonalarni saqlash va profilingizni boshqarish uchun ro'yxatdan o'ting.
-            </Text>
-          </View>
+        <View style={styles.headerContainer}>
+          <Text style={[styles.title, { color: colors.textMain }]}>
+            Ro'yxatdan o'tish
+          </Text>
+          <Text style={[styles.subtitle, { color: colors.textMuted }]}>
+            {APP_NAME} orqali sayohatingizni boshlang
+          </Text>
+        </View>
 
+        <View style={{ marginTop: 24 }}>
           {/* Xato */}
           {!!error && (
             <View style={styles.errorBanner}>
@@ -150,13 +136,13 @@ export default function RegisterScreen() {
             </View>
           )}
 
-          {renderField('name', "TO'LIQ ISM", 'user', 'Ism Familiya')}
-          {renderField('email', 'EMAIL MANZIL', 'mail', 'email@example.com', 'email-address')}
-          {renderField('phone', 'TELEFON RAQAM', 'phone', '+998 90 123 45 67', 'phone-pad')}
+          {renderField('name', "To'liq ism", 'user', 'Ism Familiya')}
+          {renderField('email', 'Email manzil', 'mail', 'email@example.com', 'email-address')}
+          {renderField('phone', 'Telefon raqam', 'phone', '+998 90 123 45 67', 'phone-pad')}
 
           {/* Parol */}
-          <View style={{ marginBottom: 16 }}>
-            <Text style={[styles.label, { color: colors.textMuted }]}>PAROL</Text>
+          <View style={{ marginBottom: 4 }}>
+            <Text style={[styles.label, { color: colors.textMain }]}>Parol</Text>
             <View style={styles.inputWrap}>
               <Feather name="lock" size={20} color={colors.textMuted} style={styles.inputIcon} />
               <TextInput
@@ -180,9 +166,8 @@ export default function RegisterScreen() {
             </View>
           </View>
 
-          {/* Rol tanlash */}
-          <View style={{ marginBottom: 20 }}>
-            <Text style={[styles.label, { color: colors.textMuted }]}>MEN...</Text>
+          <View style={{ marginBottom: 8 }}>
+            <Text style={[styles.label, { color: colors.textMain }]}>Men...</Text>
             <View style={styles.roleRow}>
               {ROLES.map((r) => {
                 const selected = formData.role === r.value;
@@ -196,16 +181,16 @@ export default function RegisterScreen() {
                       styles.roleChip,
                       {
                         backgroundColor: selected
-                          ? 'rgba(99,102,241,0.12)'
-                          : 'rgba(99,102,241,0.05)',
-                        borderColor: selected ? '#6366F1' : colors.border,
+                          ? colors.primary
+                          : colors.bgCard,
+                        borderColor: selected ? colors.primary : colors.border,
                       },
                     ]}
                   >
                     <Text
                       style={[
                         styles.roleChipText,
-                        { color: selected ? '#6366F1' : colors.textMuted },
+                        { color: selected ? '#fff' : colors.textMuted },
                       ]}
                     >
                       {r.label}
@@ -224,17 +209,12 @@ export default function RegisterScreen() {
               { transform: [{ scale: pressed ? 0.98 : 1 }], opacity: loading ? 0.75 : 1 },
             ]}
           >
-            <LinearGradient
-              colors={colors.gradientMain}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.submitBtn}
-            >
+            <View style={[styles.submitBtn, { backgroundColor: colors.primary }]}>
               {loading && <ActivityIndicator size="small" color="#fff" />}
               <Text style={styles.submitBtnText}>
-                {loading ? "Ro'yxatdan o'tilmoqda..." : "Ro'yxatdan o'tish →"}
+                {loading ? "Kutilmoqda..." : "Ro'yxatdan o'tish →"}
               </Text>
-            </LinearGradient>
+            </View>
           </Pressable>
 
           <Text style={[styles.footerText, { color: colors.textMuted }]}>
@@ -244,66 +224,32 @@ export default function RegisterScreen() {
             </Text>
           </Text>
         </View>
-      </ScrollView>
+      </View>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flexGrow: 1,
+    flex: 1,
     justifyContent: 'center',
     paddingHorizontal: 16,
+    position: 'relative',
   },
-  blob: {
+  headerContainer: {
+    marginBottom: 8,
+    alignItems: 'center',
+    paddingTop: 24,
+  },
+  backBtnWrap: {
     position: 'absolute',
-    borderRadius: 999,
-  },
-  blobTop: {
-    top: -120,
-    left: -120,
-    width: 384,
-    height: 384,
-    backgroundColor: 'rgba(124,58,237,0.1)',
-  },
-  blobBottom: {
-    bottom: -100,
-    right: -100,
-    width: 320,
-    height: 320,
-    backgroundColor: 'rgba(99,102,241,0.08)',
-  },
-  card: {
-    borderRadius: 32,
-    borderWidth: 1,
-    padding: 24,
-    shadowColor: '#1f2687',
-    shadowOpacity: 0.05,
-    shadowRadius: 32,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 3,
-  },
-  brand: {
-    alignItems: 'center',
-    marginBottom: 28,
-  },
-  brandIcon: {
-    width: 64,
-    height: 64,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 16,
-    shadowColor: '#4f46e5',
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 5 },
-    elevation: 5,
+    left: 16,
+    zIndex: 10,
   },
   title: {
-    fontSize: rs(26),
+    fontSize: rs(28),
     fontFamily: FONT.black,
-    marginBottom: 6,
+    marginBottom: 8,
     textAlign: 'center',
   },
   subtitle: {
@@ -311,17 +257,20 @@ const styles = StyleSheet.create({
     fontFamily: FONT.medium,
     textAlign: 'center',
   },
+  card: {
+    // Karta o'rniga oddiy view, padding container'dan keladi (16px)
+  },
   errorBanner: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 12,
     backgroundColor: 'rgba(239,68,68,0.08)',
     borderWidth: 1,
     borderColor: 'rgba(239,68,68,0.2)',
-    marginBottom: 20,
+    marginBottom: 12,
   },
   errorText: {
     flex: 1,
@@ -330,13 +279,13 @@ const styles = StyleSheet.create({
     color: '#ef4444',
   },
   label: {
-    fontSize: 11,
-    fontFamily: FONT.extrabold,
-    letterSpacing: 2,
-    marginBottom: 7,
+    fontSize: 13,
+    fontFamily: FONT.semibold,
+    marginBottom: 6,
   },
   inputWrap: {
     justifyContent: 'center',
+    marginBottom: 16,
   },
   inputIcon: {
     position: 'absolute',
@@ -344,17 +293,16 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   input: {
-    paddingLeft: 48,
-    paddingRight: 48,
+    paddingLeft: 44,
+    paddingRight: 44,
     paddingVertical: rs(14),
-    borderRadius: 16,
-    borderWidth: 1.5,
-    fontSize: rs(16),
-    fontFamily: FONT.semibold,
+    borderRadius: 12,
+    fontSize: rs(15),
+    fontFamily: FONT.medium,
   },
   eyeBtn: {
     position: 'absolute',
-    right: 16,
+    right: 12,
   },
   roleRow: {
     flexDirection: 'row',
@@ -362,14 +310,14 @@ const styles = StyleSheet.create({
   },
   roleChip: {
     flex: 1,
-    paddingVertical: 12,
+    paddingVertical: 10,
     paddingHorizontal: 8,
-    borderRadius: 16,
-    borderWidth: 1.5,
+    borderRadius: 10,
+    borderWidth: 1,
     alignItems: 'center',
   },
   roleChipText: {
-    fontSize: 13,
+    fontSize: 12,
     fontFamily: FONT.bold,
     textAlign: 'center',
   },
@@ -379,23 +327,18 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     paddingVertical: 14,
-    borderRadius: 16,
-    marginTop: 4,
-    shadowColor: '#4f46e5',
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 5 },
-    elevation: 5,
+    borderRadius: 12,
+    marginTop: 12,
   },
   submitBtnText: {
     color: '#fff',
-    fontSize: rs(17),
-    fontFamily: FONT.black,
+    fontSize: rs(16),
+    fontFamily: FONT.bold,
   },
   footerText: {
-    marginTop: 28,
+    marginTop: 16,
     textAlign: 'center',
-    fontSize: 14,
+    fontSize: 13,
     fontFamily: FONT.medium,
   },
   footerLink: {

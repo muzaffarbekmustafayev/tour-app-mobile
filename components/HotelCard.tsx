@@ -278,14 +278,14 @@ export const HotelCard = memo(function HotelCard({ hotel }: HotelCardProps) {
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 20,
+    borderRadius: 24,
     borderWidth: 1,
     overflow: 'hidden',
     shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 2,
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 3,
   },
   imageWrap: {
     aspectRatio: 4 / 3,
@@ -369,12 +369,12 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    padding: rs(16),
+    padding: rs(20),
   },
   name: {
-    fontSize: rs(17),
+    fontSize: rs(19),
     fontFamily: FONT.extrabold,
-    marginBottom: 4,
+    marginBottom: 6,
   },
   locationRow: {
     flexDirection: 'row',
@@ -441,8 +441,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    minHeight: rs(50),
-    borderRadius: 14,
+    minHeight: rs(54),
+    borderRadius: 16,
     shadowColor: '#6366f1',
     shadowOpacity: 0.4,
     shadowRadius: 14,
@@ -451,7 +451,7 @@ const styles = StyleSheet.create({
   },
   ctaText: {
     color: '#fff',
-    fontSize: rs(15),
+    fontSize: rs(16),
     fontFamily: FONT.bold,
   },
 });

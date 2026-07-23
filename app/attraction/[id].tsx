@@ -7,6 +7,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
+  Linking,
   Modal,
   Pressable,
   ScrollView,
@@ -383,6 +384,31 @@ export default function AttractionDetailScreen() {
             </SectionCard>
           )}
 
+        {/* ── Joylashuv ── */}
+        <SectionCard title="Joylashuv" icon={<Feather name="map-pin" size={16} color="#f43f5e" />}>
+          <Text style={[styles.locationText, { color: colors.textMuted }]}>
+            {a.address || `${a.district} tumani, Navoiy viloyati, O'zbekiston`}
+          </Text>
+          <Pressable
+            onPress={() => {
+              if (a.location?.lat && a.location?.lng) {
+                router.push({ pathname: '/(tabs)/map', params: { hotelId: a._id, route: '1' } });
+              }
+            }}
+            style={({ pressed }) => [{ transform: [{ scale: pressed ? 0.97 : 1 }] }]}
+          >
+            <LinearGradient
+              colors={AMBER_GRADIENT}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.contactBtn}
+            >
+              <Feather name="navigation" size={16} color="#fff" />
+              <Text style={styles.contactBtnText}>Mashrut ochish</Text>
+            </LinearGradient>
+          </Pressable>
+        </SectionCard>
+
         {/* ── Inklyuziv qulayliklar ── */}
         {accFeatures.length > 0 && (
           <SectionCard
@@ -601,6 +627,25 @@ export default function AttractionDetailScreen() {
 }
 
 const styles = StyleSheet.create({
+  locationText: {
+    fontSize: 14,
+    fontFamily: FONT.medium,
+    marginBottom: 16,
+    lineHeight: 20,
+  },
+  contactBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 14,
+    borderRadius: 12,
+  },
+  contactBtnText: {
+    color: '#fff',
+    fontSize: 14,
+    fontFamily: FONT.bold,
+  },
   errorScreen: {
     flex: 1,
     alignItems: 'center',

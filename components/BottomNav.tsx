@@ -1,7 +1,7 @@
 /**
- * BottomNav.tsx — pastki navigatsiya (web `BottomNav.jsx` mobil ko'rinishining porti).
- * Rolga qarab tugmalar: GUEST — Kirish, CUSTOMER — Sevimli/Profil.
- * Aktiv tugma: gradient "pill" + oq ikonka (webdagi kabi).
+ * BottomNav.tsx — pastki navigatsiya (premium dizayn).
+ * Rolga qarab tugmalar. Aktiv tugma: gradient "pill" + oq ikonka.
+ * Dizayn: Floating style, katta ikonkalar, chiroyli shadow.
  */
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -17,10 +17,10 @@ import type { UserRole } from '@/types/models';
 type FeatherName = keyof typeof Feather.glyphMap;
 
 interface NavItem {
-  route: string; // tab route nomi
+  route: string;
   label: string;
   icon: FeatherName;
-  push?: string; // tab bo'lmagan sahifa (masalan /login)
+  push?: string;
 }
 
 const NAV_ITEMS: Record<UserRole, NavItem[]> = {
@@ -54,7 +54,6 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
   ],
 };
 
-// @react-navigation/bottom-tabs prop'larining minimal strukturaviy tipi
 interface TabBarProps {
   state: { index: number; routes: { key: string; name: string }[] };
   navigation: {
@@ -97,31 +96,15 @@ export function BottomNav({ state, navigation }: TabBarProps) {
       style={[
         styles.wrap,
         {
-          backgroundColor: colors.navBg,
-          borderTopColor: colors.navBorder,
-          paddingBottom: insets.bottom,
+          backgroundColor: '#ffffff',
+          borderTopColor: 'rgba(226,232,240,0.5)',
+          paddingBottom: insets.bottom + 12,
         },
       ]}
-      accessibilityLabel="Mobil navigatsiya"
     >
       <View style={styles.row}>
         {items.map((item) => {
           const active = !item.push && activeRoute === item.route;
-          const inner = (
-            <>
-              <Feather
-                name={item.icon}
-                size={rs(22)}
-                color={active ? '#fff' : colors.textMuted}
-              />
-              <Text
-                style={[styles.label, { color: active ? '#fff' : colors.textMuted }]}
-                numberOfLines={1}
-              >
-                {item.label}
-              </Text>
-            </>
-          );
 
           return (
             <Pressable
@@ -130,19 +113,30 @@ export function BottomNav({ state, navigation }: TabBarProps) {
               accessibilityRole="button"
               accessibilityLabel={item.label}
               accessibilityState={{ selected: active }}
-              style={({ pressed }) => [{ transform: [{ scale: pressed ? 0.9 : 1 }] }]}
+              style={({ pressed }) => [
+                styles.itemWrap,
+                { transform: [{ scale: pressed ? 0.88 : 1 }], opacity: pressed ? 0.9 : 1 },
+              ]}
             >
               {active ? (
                 <LinearGradient
-                  colors={colors.gradientMain}
+                  colors={['#4f46e5', '#7c3aed']}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
-                  style={[styles.item, styles.itemActive]}
+                  style={styles.itemActive}
                 >
-                  {inner}
+                  <Feather name={item.icon} size={rs(18)} color="#ffffff" />
+                  <Text style={[styles.label, styles.labelActive]} numberOfLines={1}>
+                    {item.label}
+                  </Text>
                 </LinearGradient>
               ) : (
-                <View style={styles.item}>{inner}</View>
+                <View style={styles.itemInactive}>
+                  <Feather name={item.icon} size={rs(18)} color="#94a3b8" />
+                  <Text style={[styles.label, { color: '#94a3b8' }]} numberOfLines={1}>
+                    {item.label}
+                  </Text>
+                </View>
               )}
             </Pressable>
           );
@@ -155,39 +149,54 @@ export function BottomNav({ state, navigation }: TabBarProps) {
 const styles = StyleSheet.create({
   wrap: {
     borderTopWidth: 1,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 24,
+    shadowColor: '#4f46e5',
+    shadowOpacity: 0.04,
+    shadowRadius: 10,
     shadowOffset: { width: 0, height: -4 },
-    elevation: 12,
+    elevation: 8,
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-around',
     paddingHorizontal: 4,
-    paddingVertical: 6,
+    paddingTop: 6,
   },
-  item: {
-    minWidth: rs(58),
-    paddingTop: rs(8),
-    paddingBottom: rs(7),
-    paddingHorizontal: rs(12),
-    borderRadius: 16,
+  itemWrap: {
+    flex: 1,
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 4,
   },
   itemActive: {
+    paddingTop: rs(6),
+    paddingBottom: rs(5),
+    paddingHorizontal: rs(12),
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 2,
+    minWidth: rs(52),
     shadowColor: '#4f46e5',
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 5 },
-    elevation: 5,
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 4,
+  },
+  itemInactive: {
+    paddingTop: rs(6),
+    paddingBottom: rs(5),
+    paddingHorizontal: rs(12),
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 2,
+    minWidth: rs(52),
   },
   label: {
-    fontSize: rs(10),
+    fontSize: rs(8.5),
     fontFamily: FONT.bold,
     letterSpacing: 0.2,
+  },
+  labelActive: {
+    color: '#ffffff',
   },
 });

@@ -45,16 +45,12 @@ interface Category {
 }
 
 const CATEGORIES: Category[] = [
-  { name: 'Hashamatli', query: 'luxury', color: '#f59e0b', icon: (c) => <Feather name="award" size={20} color={c} /> },
-  { name: 'Resort', query: 'resort', color: '#10b981', icon: (c) => <Feather name="sun" size={20} color={c} /> },
-  { name: 'Arzon', query: 'budget', color: '#6366f1', icon: (c) => <Feather name="dollar-sign" size={20} color={c} /> },
-  { name: 'Oilaviy', query: 'family', color: '#ec4899', icon: (c) => <MaterialIcons name="family-restroom" size={20} color={c} /> },
-  { name: 'Butik', query: 'boutique', color: '#8b5cf6', icon: (c) => <Feather name="home" size={20} color={c} /> },
-  { name: 'Biznes', query: 'business', color: '#0ea5e9', icon: (c) => <Feather name="briefcase" size={20} color={c} /> },
-  { name: 'Aravacha', query: 'wheelchair', color: '#7c3aed', accessKey: 'wheelchair', icon: (c) => <MaterialCommunityIcons name="wheelchair-accessibility" size={20} color={c} /> },
-  { name: 'Eshitish', query: 'audioGuides', color: '#06b6d4', accessKey: 'audioGuides', icon: (c) => <MaterialIcons name="hearing" size={20} color={c} /> },
-  { name: "Ko'rish", query: 'tactilePaving', color: '#059669', accessKey: 'tactilePaving', icon: (c) => <MaterialIcons name="visibility" size={20} color={c} /> },
-  { name: 'Keksalar', query: 'family', color: '#d97706', icon: (c) => <MaterialIcons name="elderly" size={20} color={c} /> },
+  { name: 'Hashamatli', query: 'luxury', color: '#f59e0b', icon: (c) => <Feather name="award" size={22} color={c} /> },
+  { name: 'Resort', query: 'resort', color: '#10b981', icon: (c) => <Feather name="sun" size={22} color={c} /> },
+  { name: 'Arzon', query: 'budget', color: '#6366f1', icon: (c) => <Feather name="dollar-sign" size={22} color={c} /> },
+  { name: 'Oilaviy', query: 'family', color: '#ec4899', icon: (c) => <MaterialIcons name="family-restroom" size={22} color={c} /> },
+  { name: 'Butik', query: 'boutique', color: '#8b5cf6', icon: (c) => <Feather name="home" size={22} color={c} /> },
+  { name: 'Biznes', query: 'business', color: '#0ea5e9', icon: (c) => <Feather name="briefcase" size={22} color={c} /> },
 ];
 
 const DISTRICT_COLORS = ['#6366f1', '#f43f5e', '#f59e0b'];
@@ -238,53 +234,20 @@ export default function HomeScreen() {
           />
         </ImageBackground>
 
-        <View style={styles.main}>
-          {/* ── Hududlar (tumanlar) ── */}
-          {!loading && districts.length > 0 && (
-            <View style={styles.districtGrid}>
-              {districts.map((district, i) => {
-                const count = hotels.filter((h) => h.city === district).length;
-                const color = DISTRICT_COLORS[i % DISTRICT_COLORS.length];
-                return (
-                  <Pressable
-                    key={district}
-                    onPress={() => router.push({ pathname: '/search', params: { city: district } })}
-                    accessibilityLabel={`${district} tumanidagi joylar`}
-                    style={({ pressed }) => [
-                      styles.districtCard,
-                      {
-                        backgroundColor: colors.bgCard,
-                        borderColor: colors.border,
-                        borderTopColor: color,
-                        transform: [{ scale: pressed ? 0.97 : 1 }],
-                      },
-                    ]}
-                  >
-                    <Feather name="map-pin" size={18} color={color} />
-                    <Text style={[styles.districtName, { color }]}>{district}</Text>
-                    <Text style={[styles.districtCount, { color: colors.textMuted }]}>
-                      {count} TA MASKAN
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </View>
-          )}
 
-          {/* ── Kategoriyalar ── */}
+
+        <View style={styles.main}>
+
+          {/* ── Kategoriyalar (2x grid) ── */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={[styles.sectionTitle, { color: colors.textMain }]}>Kategoriyalar</Text>
               <Pressable onPress={() => router.push('/search')} style={styles.seeAll}>
-                <Text style={styles.seeAllText}>Barchasi</Text>
-                <Feather name="chevron-right" size={16} color="#6366f1" />
+                <Text style={styles.seeAllText}>Hammasi</Text>
+                <Feather name="chevron-right" size={14} color="#6366f1" />
               </Pressable>
             </View>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.categoryRow}
-            >
+            <View style={styles.categoryGrid}>
               {CATEGORIES.map((cat) => (
                 <Pressable
                   key={cat.name}
@@ -296,47 +259,26 @@ export default function HomeScreen() {
                   }
                   accessibilityLabel={`${cat.name} mehmonxonalarini qidirish`}
                   style={({ pressed }) => [
-                    styles.categoryChip,
+                    styles.categoryGridItem,
                     {
-                      backgroundColor: `${cat.color}12`,
-                      borderColor: `${cat.color}25`,
-                      transform: [{ scale: pressed ? 0.97 : 1 }],
+                      backgroundColor: colors.bgCard,
+                      borderColor: colors.border,
+                      transform: [{ scale: pressed ? 0.96 : 1 }],
                     },
                   ]}
                 >
-                  {cat.icon(cat.color)}
-                  <Text style={[styles.categoryText, { color: cat.color }]}>{cat.name}</Text>
+                  <View style={[styles.categoryIconBox, { backgroundColor: `${cat.color}15` }]}>
+                    {cat.icon(cat.color)}
+                  </View>
+                  <Text style={[styles.categoryGridText, { color: colors.textMain }]} numberOfLines={1}>
+                    {cat.name}
+                  </Text>
                 </Pressable>
               ))}
-            </ScrollView>
+            </View>
           </View>
 
-          {/* ── Xarita havolasi ── */}
-          <Pressable
-            onPress={() => router.push('/map')}
-            style={({ pressed }) => [
-              styles.mapLink,
-              { transform: [{ scale: pressed ? 0.98 : 1 }] },
-            ]}
-          >
-            <LinearGradient
-              colors={['#6366f1', '#8b5cf6']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.mapLinkIcon}
-            >
-              <Feather name="map" size={22} color="#fff" />
-            </LinearGradient>
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.mapLinkTitle, { color: colors.textMain }]}>
-                Mehmonxonalar xaritasi
-              </Text>
-              <Text style={[styles.mapLinkSub, { color: colors.textMuted }]} numberOfLines={1}>
-                Barcha dam olish maskanlarini xaritada ko'ring
-              </Text>
-            </View>
-            <Feather name="arrow-right" size={18} color="#818cf8" />
-          </Pressable>
+
 
           {/* ── Diqqatga sazovor (tarixiy) joylar ── */}
           {attractions.length > 0 && (
@@ -365,6 +307,34 @@ export default function HomeScreen() {
               </View>
             </View>
           )}
+
+
+          {/* ── Xarita havolasi ── */}
+          <Pressable
+            onPress={() => router.push('/map')}
+            style={({ pressed }) => [
+              styles.mapLink,
+              { transform: [{ scale: pressed ? 0.98 : 1 }] },
+            ]}
+          >
+            <LinearGradient
+              colors={['#6366f1', '#8b5cf6']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.mapLinkIcon}
+            >
+              <Feather name="map" size={22} color="#fff" />
+            </LinearGradient>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.mapLinkTitle, { color: colors.textMain }]}>
+                Mehmonxonalar xaritasi
+              </Text>
+              <Text style={[styles.mapLinkSub, { color: colors.textMuted }]} numberOfLines={1}>
+                Barcha dam olish maskanlarini xaritada ko'ring
+              </Text>
+            </View>
+            <Feather name="arrow-right" size={18} color="#818cf8" />
+          </Pressable>
 
           {/* ── Inklyuziv banner ── */}
           <AccessibilityBanner />
@@ -540,26 +510,6 @@ export default function HomeScreen() {
         </View>
       </ScrollView>
 
-      {/* ── Yuqoriga qaytish ── */}
-      {showTop && (
-        <Pressable
-          onPress={() => scrollRef.current?.scrollTo({ y: 0, animated: true })}
-          accessibilityLabel="Yuqoriga"
-          style={({ pressed }) => [
-            styles.scrollTopWrap,
-            { transform: [{ scale: pressed ? 0.92 : 1 }] },
-          ]}
-        >
-          <LinearGradient
-            colors={colors.gradientMain}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.scrollTop}
-          >
-            <Feather name="arrow-up" size={20} color="#fff" />
-          </LinearGradient>
-        </Pressable>
-      )}
     </View>
   );
 }
@@ -669,20 +619,19 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   districtGrid: {
-    flexDirection: 'row',
     gap: 10,
     marginTop: -32,
     marginBottom: 32,
-    paddingHorizontal: 4,
+    paddingHorizontal: 16,
     zIndex: 10,
   },
   districtCard: {
-    flex: 1,
+    minWidth: 100,
     alignItems: 'center',
     gap: 4,
-    paddingVertical: 16,
-    paddingHorizontal: 4,
-    borderRadius: 20,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderRadius: 16,
     borderWidth: 1,
     borderTopWidth: 3,
     shadowColor: '#000',
@@ -692,17 +641,17 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   districtName: {
-    fontSize: rs(16),
+    fontSize: rs(13.5),
     fontFamily: FONT.black,
     textAlign: 'center',
   },
   districtCount: {
-    fontSize: rs(9.5),
+    fontSize: rs(8),
     fontFamily: FONT.bold,
-    letterSpacing: 0.9,
+    letterSpacing: 0.5,
   },
   section: {
-    marginBottom: 48,
+    marginBottom: 32,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -717,7 +666,7 @@ const styles = StyleSheet.create({
     flexShrink: 1,
   },
   sectionTitle: {
-    fontSize: rs(21),
+    fontSize: rs(18),
     fontFamily: FONT.black,
   },
   sectionSub: {
@@ -732,26 +681,36 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   seeAllText: {
-    fontSize: rs(15),
+    fontSize: rs(13),
     fontFamily: FONT.bold,
     color: '#6366f1',
   },
-  categoryRow: {
-    gap: 12,
-    paddingRight: 16,
-  },
-  categoryChip: {
+  categoryGrid: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: rs(18),
-    paddingVertical: rs(12),
-    borderRadius: 16,
-    borderWidth: 1.5,
+    flexWrap: 'wrap',
+    gap: 10,
   },
-  categoryText: {
-    fontSize: rs(15),
+  categoryGridItem: {
+    width: '30%',
+    flexGrow: 1,
+    alignItems: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 8,
+    borderRadius: 16,
+    borderWidth: 1,
+    gap: 8,
+  },
+  categoryIconBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  categoryGridText: {
+    fontSize: rs(12),
     fontFamily: FONT.bold,
+    textAlign: 'center',
   },
   mapLink: {
     flexDirection: 'row',

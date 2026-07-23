@@ -20,9 +20,9 @@ import {
 } from '@expo-google-fonts/outfit';
 import { AuthProvider } from '@/context/AuthContext';
 import { useAuth, useTheme } from '@/hooks/useTheme';
-import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { Loader } from '@/components/ui/Loader';
 import { APP_NAME } from '@/constants/config';
+import { OfflineBanner } from '@/components/OfflineBanner';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -49,11 +49,11 @@ function RootContent() {
             <Stack.Screen name="attraction/[id]" />
             <Stack.Screen name="login" />
             <Stack.Screen name="register" />
+            <Stack.Screen name="ai-chat" options={{ animation: 'slide_from_bottom' }} />
           </Stack>
-          {/* Tema almashtirish — barcha sahifalarda ko'rinadi (web bilan bir xil) */}
-          <ThemeToggle />
         </>
       )}
+      <OfflineBanner />
     </View>
   );
 }

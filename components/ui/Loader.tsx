@@ -3,7 +3,7 @@
  * Aylanuvchi halqa + markazda xarita ikonkasi + progress chiziq.
  */
 import React, { useEffect, useRef } from 'react';
-import { Animated, Easing, StyleSheet, Text, View } from 'react-native';
+import { Animated, Easing, Platform, StyleSheet, Text, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useTheme } from '@/hooks/useTheme';
 import { FONT } from '@/constants/theme';
@@ -27,7 +27,7 @@ export function Loader({ fullScreen = false, message }: LoaderProps) {
         toValue: 1,
         duration: 1000,
         easing: Easing.linear,
-        useNativeDriver: true,
+        useNativeDriver: Platform.OS !== 'web',
       }),
     );
     const progressLoop = Animated.loop(
@@ -35,7 +35,7 @@ export function Loader({ fullScreen = false, message }: LoaderProps) {
         toValue: 1,
         duration: 2000,
         easing: Easing.inOut(Easing.ease),
-        useNativeDriver: true,
+        useNativeDriver: Platform.OS !== 'web',
       }),
     );
     spinLoop.start();

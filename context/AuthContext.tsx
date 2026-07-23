@@ -15,7 +15,6 @@ import React, {
   useMemo,
   type ReactNode,
 } from 'react';
-import { Appearance } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api, { setOnUnauthorized } from '@/services/api';
 import { TOKEN_KEY, DARK_MODE_KEY } from '@/constants/config';
@@ -59,17 +58,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [favorites, setFavorites] = useState<string[]>([]);
   // Foydalanuvchi qo'lda tanlaganmi yoki tizim temasiga ergashyaptimi
   const [themeUserSet, setThemeUserSet] = useState(false);
-  const [darkMode, setDarkModeRaw] = useState(false);
+  const [darkMode, setDarkModeRaw] = useState(false); // always light by default
 
-  // Boshlang'ich tema: saqlangan tanlov, bo'lmasa tizim temasi
+  // Boshlang'ich tema: faqat foydalanuvchi qo'lda saqlagan tanlovni yuklash
+  // Tizim (system) dark mode ga ergashmaymiz — default doim light
   useEffect(() => {
     AsyncStorage.getItem(DARK_MODE_KEY).then((saved) => {
       if (saved !== null) {
         setThemeUserSet(true);
         setDarkModeRaw(saved === 'true');
-      } else {
-        setDarkModeRaw(Appearance.getColorScheme() === 'dark');
       }
+      // saved === null bo'lsa default: false (light mode)
     });
   }, []);
 
@@ -85,15 +84,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     },
     [],
   );
-
-  // Foydalanuvchi qo'lda tanlamagan bo'lsa — tizim temasi o'zgarsa ergashish
-  useEffect(() => {
-    if (themeUserSet) return;
-    const sub = Appearance.addChangeListener(({ colorScheme }) => {
-      setDarkModeRaw(colorScheme === 'dark');
-    });
-    return () => sub.remove();
-  }, [themeUserSet]);
 
   const fetchFavorites = useCallback(async () => {
     try {

@@ -8,7 +8,7 @@
 import Constants from 'expo-constants';
 
 // ── Ilova identifikatori ──────────────────────────────────────
-export const APP_NAME = 'NavaiTour';
+export const APP_NAME = 'Tourism for everyone';
 export const APP_DESCRIPTION = 'Navoiy viloyatidagi mehmonxonalarni qidiring';
 
 // ── API ulanish sozlamalari ───────────────────────────────────
@@ -21,7 +21,7 @@ export const API_URL =
 export const API_TIMEOUT_MS = 15_000; // 15 soniya
 
 // Server ildizi — nisbiy rasm yo'llarini to'liq URL ga aylantirish uchun
-export const SERVER_ROOT = API_URL.replace(/\/api$/, '');
+export const SERVER_ROOT = API_URL;
 
 // ── Saqlash kalitlari ─────────────────────────────────────────
 export const TOKEN_KEY = 'token';
@@ -45,8 +45,9 @@ export const FALLBACK_DETAIL_IMAGE =
 export const DEFAULT_LOCALE = 'uz-UZ';
 export const CURRENCY = 'UZS';
 
-/** Nisbiy rasm yo'lini to'liq URL ga aylantiradi (web `imgSrc` bilan bir xil) */
 export const imgSrc = (src?: string | null, fallback: string = FALLBACK_IMAGE): string => {
   if (!src) return fallback;
-  return src.startsWith('http') ? src : `${SERVER_ROOT}/${src}`;
+  if (src.startsWith('http')) return src;
+  const cleanSrc = src.startsWith('/') ? src.slice(1) : src;
+  return `${SERVER_ROOT}/${cleanSrc}`;
 };

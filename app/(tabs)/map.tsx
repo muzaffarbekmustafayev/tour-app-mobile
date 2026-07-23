@@ -20,6 +20,7 @@ import {
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Location from 'expo-location';
+import { type LocationSubscription } from 'expo-location';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { WebView, type WebViewMessageEvent } from 'react-native-webview';
@@ -29,7 +30,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { FONT } from '@/constants/theme';
 import { imgSrc } from '@/constants/config';
 import { Loader } from '@/components/ui/Loader';
-import type { Hotel } from '@/types/models';
+import type { Hotel, Attraction } from '@/types/models';
 
 const CARD_WIDTH = 220;
 const CARD_GAP = 12;
@@ -133,23 +134,23 @@ const fmtTime = (s: number): string =>
       : `${Math.floor(s / 3600)}s ${Math.round((s % 3600) / 60)}d`;
 
 /** Manevr turiga mos ikonka (web stepIcon porti) */
-const stepIcon = (step: RouteStep, muted: string): ReactElement => {
-  const mod = step.modifier || '';
-  if (step.type === 'arrive') return <Feather name="flag" size={15} color="#16a34a" />;
-  if (step.type === 'depart') return <Feather name="map-pin" size={15} color="#2563eb" />;
-  if (mod.includes('left')) return <Feather name="corner-up-left" size={15} color={muted} />;
-  if (mod.includes('right')) return <Feather name="corner-up-right" size={15} color={muted} />;
-  return <Feather name="arrow-up" size={15} color={muted} />;
+const stepIcon = (step: any, muted: string, size = 16) => {
+  if (!step?.modifier) return <Feather name="navigation" size={size} color={muted} />;
+  const mod = step.modifier.toLowerCase();
+  if (mod.includes('left')) return <Feather name="corner-up-left" size={size} color={muted} />;
+  if (mod.includes('right')) return <Feather name="corner-up-right" size={size} color={muted} />;
+  return <Feather name="arrow-up" size={size} color={muted} />;
 };
 
 /* ══════════ Leaflet HTML ══════════ */
 
-const buildMapHtml = (hotels: Hotel[], darkMode: boolean): string => {
-  const points = hotels.map((h) => ({
-    id: h._id,
-    name: (h.name || '').replace(/["\\]/g, ''),
-    lat: h.location!.lat!,
-    lng: h.location!.lng!,
+const buildMapHtml = (places: any[], darkMode: boolean): string => {
+  const points = places.map((p) => ({
+    id: p._id,
+    name: (p.name || '').replace(/["\\]/g, ''),
+    lat: p.location!.lat!,
+    lng: p.location!.lng!,
+    mapType: p.mapType,
   }));
 
   const tileUrl = darkMode
@@ -181,6 +182,10 @@ const buildMapHtml = (hotels: Hotel[], darkMode: boolean): string => {
   .pin-wrap.active { transform: scale(1.3); }
   .pin-wrap.active .pin-body { background: #f43f5e; }
 
+  /* Attraction pin rangi */
+  .pin-wrap.pin-attraction .pin-body { background: #d97706; }
+  .pin-wrap.pin-attraction.active .pin-body { background: #f59e0b; }
+
   /* Foydalanuvchi markeri — yashil puls (web userIcon) */
   @keyframes pulse-ring { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(1.9); opacity: 0; } }
   .user-dot { position: absolute; inset: 0; background: #10b981; border-radius: 50%;
@@ -198,9 +203,9 @@ const buildMapHtml = (hotels: Hotel[], darkMode: boolean): string => {
 <body>
 <div id="map"></div>
 <script>
-  var hotels = ${JSON.stringify(points)};
+  var places = ${JSON.stringify(points)};
   var map = L.map('map', { zoomControl: false, attributionControl: true })
-    .setView([40.0842, 65.3791], 8);
+    .setView([40.0842, 65.3791], 10);
   L.tileLayer('${tileUrl}', {
     attribution: '&copy; OpenStreetMap &copy; CARTO',
     maxZoom: 19,
@@ -208,21 +213,22 @@ const buildMapHtml = (hotels: Hotel[], darkMode: boolean): string => {
   }).addTo(map);
 
   var markers = {};
-  hotels.forEach(function (h) {
+  places.forEach(function (p) {
+    var cls = p.mapType === 'attraction' ? 'pin-attraction' : '';
     var icon = L.divIcon({
       className: '',
-      html: '<div class="pin-wrap" id="pin-' + h.id + '"><div class="pin-body"></div><div class="pin-dot"></div></div>',
+      html: '<div class="pin-wrap ' + cls + '" id="pin-' + p.id + '"><div class="pin-body"></div><div class="pin-dot"></div></div>',
       iconSize: [30, 38],
       iconAnchor: [15, 38]
     });
-    var m = L.marker([h.lat, h.lng], { icon: icon, title: h.name }).addTo(map);
+    var m = L.marker([p.lat, p.lng], { icon: icon, title: p.name }).addTo(map);
     m.on('click', function () {
-      selectPin(h.id);
+      selectPin(p.id);
       if (window.ReactNativeWebView) {
-        window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'select', id: h.id }));
+        window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'select', id: p.id }));
       }
     });
-    markers[h.id] = m;
+    markers[p.id] = m;
   });
 
   function selectPin(id) {
@@ -234,11 +240,11 @@ const buildMapHtml = (hotels: Hotel[], darkMode: boolean): string => {
   }
 
   function focusHotel(id) {
-    var h = null;
-    for (var i = 0; i < hotels.length; i++) if (hotels[i].id === id) h = hotels[i];
-    if (!h) return;
+    var p = null;
+    for (var i = 0; i < places.length; i++) if (places[i].id === id) p = places[i];
+    if (!p) return;
     selectPin(id);
-    map.flyTo([h.lat, h.lng], 13, { duration: 0.6 });
+    map.flyTo([p.lat, p.lng], 13, { duration: 0.6 });
   }
   window.focusHotel = focusHotel;
 
@@ -247,7 +253,13 @@ const buildMapHtml = (hotels: Hotel[], darkMode: boolean): string => {
 
   window.showRoute = function (coords, fromLat, fromLng, hotelId) {
     window.clearRoute();
-    if (hotelId) selectPin(hotelId);
+    if (hotelId) {
+      selectPin(hotelId);
+      // Boshqa pinlarni xaritadan olib tashlash
+      Object.keys(markers).forEach(function (k) {
+        if (k !== hotelId) map.removeLayer(markers[k]);
+      });
+    }
     // Ostki qalin "casing" + ustki animatsiyali chiziq
     routeCasing = L.polyline(coords, { color: '#4f46e5', weight: 9, opacity: 0.18, lineCap: 'round' }).addTo(map);
     routeLine = L.polyline(coords, { color: '#6366f1', weight: 5, opacity: 0.95, lineCap: 'round', className: 'route-line' }).addTo(map);
@@ -260,8 +272,8 @@ const buildMapHtml = (hotels: Hotel[], darkMode: boolean): string => {
     userMarker = L.marker([fromLat, fromLng], { icon: userIcon, zIndexOffset: 2000 }).addTo(map);
     // Panel (tepada) va karusel (pastda) uchun joy qoldirib qamrab olish
     map.fitBounds(routeLine.getBounds(), {
-      paddingTopLeft: [30, 230],
-      paddingBottomRight: [30, 210]
+      paddingTopLeft: [30, 120],
+      paddingBottomRight: [30, 260] // Marshrut paneli uchun ko'proq joy
     });
   };
 
@@ -269,13 +281,23 @@ const buildMapHtml = (hotels: Hotel[], darkMode: boolean): string => {
     if (routeCasing) { map.removeLayer(routeCasing); routeCasing = null; }
     if (routeLine) { map.removeLayer(routeLine); routeLine = null; }
     if (userMarker) { map.removeLayer(userMarker); userMarker = null; }
+    // Barcha pinlarni xaritaga qaytarish
+    Object.keys(markers).forEach(function (k) {
+      if (!map.hasLayer(markers[k])) map.addLayer(markers[k]);
+    });
   };
 
-  if (hotels.length > 1) {
+  window.updateUserLocation = function (lat, lng) {
+    if (userMarker) {
+      userMarker.setLatLng([lat, lng]);
+    }
+  };
+
+  if (places.length > 1) {
     var group = L.featureGroup(Object.keys(markers).map(function (k) { return markers[k]; }));
     map.fitBounds(group.getBounds().pad(0.25));
-  } else if (hotels.length === 1) {
-    map.setView([hotels[0].lat, hotels[0].lng], 12);
+  } else if (places.length === 1) {
+    map.setView([places[0].lat, places[0].lng], 12);
   }
 </script>
 </body>
@@ -308,21 +330,26 @@ export default function MapScreen() {
   const webRef = useRef<WebView>(null);
   const carouselRef = useRef<ScrollView>(null);
   const autoRouteDone = useRef(false);
+  const locationSub = useRef<LocationSubscription | null>(null);
 
-  const [hotels, setHotels] = useState<Hotel[]>([]);
+  const [places, setPlaces] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [guidance, setGuidance] = useState<Guidance | null>(null);
   const [showSteps, setShowSteps] = useState(false);
 
   useEffect(() => {
-    api
-      .get('/hotels')
-      .then((res) => {
-        const data: Hotel[] = Array.isArray(res.data) ? res.data : res.data.data || [];
-        setHotels(data.filter((h) => h.location?.lat && h.location?.lng));
+    Promise.all([api.get('/hotels'), api.get('/attractions')])
+      .then(([hRes, aRes]) => {
+        const hData: Hotel[] = Array.isArray(hRes.data) ? hRes.data : hRes.data.data || [];
+        const aData: Attraction[] = Array.isArray(aRes.data) ? aRes.data : aRes.data.data || [];
+        
+        const validHotels = hData.filter((h) => h.location?.lat && h.location?.lng).map((h) => ({ ...h, mapType: 'hotel' }));
+        const validAttractions = aData.filter((a) => a.location?.lat && a.location?.lng).map((a) => ({ ...a, mapType: 'attraction' }));
+        
+        setPlaces([...validHotels, ...validAttractions]);
       })
-      .catch(() => setHotels([]))
+      .catch(() => setPlaces([]))
       .finally(() => setLoading(false));
   }, []);
 
@@ -331,12 +358,12 @@ export default function MapScreen() {
   }, [hotelId]);
 
   const html = useMemo(
-    () => (hotels.length ? buildMapHtml(hotels, darkMode) : ''),
-    [hotels, darkMode],
+    () => (places.length ? buildMapHtml(places, darkMode) : ''),
+    [places, darkMode],
   );
 
   const scrollToCard = (id: string) => {
-    const idx = hotels.findIndex((h) => h._id === id);
+    const idx = places.findIndex((p) => p._id === id);
     if (idx >= 0) {
       carouselRef.current?.scrollTo({ x: idx * (CARD_WIDTH + CARD_GAP), animated: true });
     }
@@ -384,6 +411,24 @@ export default function MapScreen() {
       );
       setGuidance({ status: 'ready', hotel, data, error: null });
       scrollToCard(hotel._id);
+
+      // 5. Haqiqiy vaqtda manzilni kuzatish (offline bo'lganda ham marshrut davom etishi uchun)
+      if (locationSub.current) {
+        locationSub.current.remove();
+      }
+      locationSub.current = await Location.watchPositionAsync(
+        {
+          accuracy: Location.Accuracy.BestForNavigation,
+          timeInterval: 2000,
+          distanceInterval: 5,
+        },
+        (loc) => {
+          webRef.current?.injectJavaScript(
+            `window.updateUserLocation && window.updateUserLocation(${loc.coords.latitude}, ${loc.coords.longitude}); true;`,
+          );
+        }
+      );
+
     } catch {
       setGuidance({
         status: 'error',
@@ -395,10 +440,22 @@ export default function MapScreen() {
   };
 
   const clearGuidance = () => {
+    if (locationSub.current) {
+      locationSub.current.remove();
+      locationSub.current = null;
+    }
     setGuidance(null);
     setShowSteps(false);
     webRef.current?.injectJavaScript('window.clearRoute && window.clearRoute(); true;');
   };
+
+  useEffect(() => {
+    return () => {
+      if (locationSub.current) {
+        locationSub.current.remove();
+      }
+    };
+  }, []);
 
   // Xarita yuklangach: fokus + (hotel detaldan kelgan bo'lsa) avtomatik marshrut
   const handleMapLoaded = () => {
@@ -417,7 +474,7 @@ export default function MapScreen() {
     }
     // hotel/[id] dagi "Yo'nalishni ko'rish" dan kelingan — marshrutni ochish
     if (route === '1' && typeof hotelId === 'string' && !autoRouteDone.current) {
-      const target = hotels.find((h) => h._id === hotelId);
+      const target = places.find((p) => p._id === hotelId);
       if (target) {
         autoRouteDone.current = true;
         drawRoute(target);
@@ -449,7 +506,7 @@ export default function MapScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.bgMain }}>
-      {hotels.length > 0 ? (
+      {places.length > 0 ? (
         <WebView
           ref={webRef}
           key={darkMode ? 'dark' : 'light'}
@@ -476,216 +533,220 @@ export default function MapScreen() {
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 }}>
           <Feather name="map" size={48} color={colors.textMuted} />
           <Text style={[styles.emptyText, { color: colors.textMuted }]}>
-            Koordinatali mehmonxona topilmadi
+            Koordinatali maskanlar topilmadi
           </Text>
         </View>
       )}
 
-      {/* Sarlavha pilli — marshrut paneli ochiq bo'lsa yashirinadi */}
+      {/* ── TOP BAR: Idle (xarita sarlavhasi) ── */}
       {!g && (
         <View
           style={[
-            styles.titlePill,
-            { top: insets.top + 12, backgroundColor: colors.bgCard, borderColor: colors.border },
-          ]}
-        >
-          <Feather name="map" size={16} color={colors.primary} />
-          <Text style={[styles.titleText, { color: colors.textMain }]}>
-            Mehmonxonalar xaritasi
-          </Text>
-        </View>
-      )}
-
-      {/* ══ Marshrut paneli (web MapRouteOverlay porti) ══ */}
-      {g && (
-        <View
-          style={[
-            styles.routePanel,
+            styles.topBar,
             {
-              // ThemeToggle (o'ng yuqori, 40px) ostidan boshlanadi
-              top: insets.top + 60,
-              backgroundColor: colors.bgCard,
-              borderColor: colors.border,
+              top: insets.top + 12,
+              backgroundColor: darkMode ? 'rgba(15,23,42,0.82)' : 'rgba(255,255,255,0.88)',
+              borderColor: darkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)',
             },
           ]}
         >
-          {/* Sarlavha */}
-          <View style={[styles.routeHeader, { borderBottomColor: colors.border }]}>
-            <View style={styles.routeHeaderLeft}>
-              <View
-                style={[
-                  styles.routeNavIcon,
-                  { backgroundColor: darkMode ? 'rgba(30,58,138,0.3)' : '#eff6ff' },
-                ]}
-              >
-                <Feather name="navigation" size={17} color="#2563eb" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.routeKicker, { color: colors.textMuted }]}>YO'NALISH</Text>
-                <Text style={[styles.routeHotelName, { color: colors.textMain }]} numberOfLines={1}>
-                  {g.hotel.name}
-                </Text>
-              </View>
-            </View>
-            <Pressable
-              onPress={clearGuidance}
-              accessibilityLabel="Yo'nalishni yopish"
-              hitSlop={8}
-              style={({ pressed }) => [
-                styles.routeClose,
-                { backgroundColor: pressed ? colors.bgHover : 'transparent' },
-              ]}
-            >
-              <Feather name="x" size={18} color={colors.textMuted} />
-            </Pressable>
+          <View style={[styles.topBarIconWrap, { backgroundColor: darkMode ? 'rgba(99,102,241,0.2)' : '#eef2ff' }]}>
+            <Feather name="map" size={15} color="#6366f1" />
           </View>
-
-          <View style={styles.routeBody}>
-            {/* Holat: hisoblanmoqda */}
-            {(g.status === 'locating' || g.status === 'routing') && (
-              <View style={styles.routeLoading}>
-                <ActivityIndicator size="small" color="#2563eb" />
-                <Text style={styles.routeLoadingText}>
-                  {g.status === 'locating' ? 'Joylashuv aniqlanmoqda...' : 'Hisoblanmoqda...'}
-                </Text>
-              </View>
-            )}
-
-            {/* Xato */}
-            {g.status === 'error' && (
-              <View style={styles.routeError}>
-                <Feather name="alert-triangle" size={16} color="#ef4444" />
-                <Text style={styles.routeErrorText}>{g.error}</Text>
-              </View>
-            )}
-
-            {/* Statistika: Masofa | Vaqt + Google Maps */}
-            {g.status === 'ready' && g.data && (
-              <>
-                <View style={styles.routeStats}>
-                  <View style={styles.routeStatsLeft}>
-                    <View>
-                      <View style={styles.routeStatLabelRow}>
-                        <Feather name="map-pin" size={11} color={colors.textMuted} />
-                        <Text style={[styles.routeStatLabel, { color: colors.textMuted }]}>
-                          MASOFA
-                        </Text>
-                      </View>
-                      <Text style={[styles.routeStatValue, { color: colors.textMain }]}>
-                        {fmtDist(g.data.distance)}
-                      </Text>
-                    </View>
-                    <View style={[styles.routeStatDivider, { backgroundColor: colors.border }]} />
-                    <View>
-                      <View style={styles.routeStatLabelRow}>
-                        <Feather name="clock" size={11} color={colors.textMuted} />
-                        <Text style={[styles.routeStatLabel, { color: colors.textMuted }]}>
-                          VAQT
-                        </Text>
-                      </View>
-                      <Text style={[styles.routeStatValue, { color: '#16a34a' }]}>
-                        {fmtTime(g.data.duration)}
-                      </Text>
-                    </View>
-                  </View>
-                  {/* Google Maps'da ochish (qo'shimcha) */}
-                  <Pressable
-                    onPress={() =>
-                      Linking.openURL(
-                        `https://www.google.com/maps/dir/?api=1&destination=${g.hotel.location?.lat},${g.hotel.location?.lng}&travelmode=driving`,
-                      )
-                    }
-                    accessibilityLabel="Google Maps'da ochish"
-                    style={({ pressed }) => [
-                      styles.routeExternal,
-                      {
-                        backgroundColor: colors.bgHover,
-                        transform: [{ scale: pressed ? 0.92 : 1 }],
-                      },
-                    ]}
-                  >
-                    <Feather name="external-link" size={17} color="#2563eb" />
-                  </Pressable>
-                </View>
-
-                {/* Keyingi manevr + barcha qadamlar */}
-                {g.data.steps.length > 0 && (
-                  <View style={[styles.stepsBox, { borderColor: colors.border }]}>
-                    <View
-                      style={[
-                        styles.nextStep,
-                        { backgroundColor: darkMode ? 'rgba(30,58,138,0.2)' : '#eff6ff' },
-                      ]}
-                    >
-                      <View style={[styles.stepIcon, { backgroundColor: colors.bgCard }]}>
-                        {stepIcon(g.data.steps[0], colors.textMuted)}
-                      </View>
-                      <View style={{ flex: 1 }}>
-                        <Text
-                          style={[styles.nextStepText, { color: colors.textMain }]}
-                          numberOfLines={1}
-                        >
-                          {g.data.steps[0].text}
-                        </Text>
-                        {g.data.steps[0].distance > 0 && (
-                          <Text style={[styles.stepDist, { color: colors.textMuted }]}>
-                            {fmtDist(g.data.steps[0].distance)}
-                          </Text>
-                        )}
-                      </View>
-                    </View>
-
-                    <Pressable
-                      onPress={() => setShowSteps((s) => !s)}
-                      style={({ pressed }) => [
-                        styles.stepsToggle,
-                        { backgroundColor: pressed ? colors.bgHover : 'transparent' },
-                      ]}
-                    >
-                      <Text style={[styles.stepsToggleText, { color: colors.textMuted }]}>
-                        Barcha bosqichlar ({g.data.steps.length})
-                      </Text>
-                      <Feather
-                        name={showSteps ? 'chevron-up' : 'chevron-down'}
-                        size={14}
-                        color={colors.textMuted}
-                      />
-                    </Pressable>
-
-                    {showSteps && (
-                      <ScrollView style={styles.stepsList} nestedScrollEnabled>
-                        {g.data.steps.map((s, i) => (
-                          <View
-                            key={i}
-                            style={[styles.stepRow, { borderTopColor: colors.border }]}
-                          >
-                            <View style={[styles.stepIconSm, { backgroundColor: colors.bgHover }]}>
-                              {stepIcon(s, colors.textMuted)}
-                            </View>
-                            <View style={{ flex: 1 }}>
-                              <Text style={[styles.stepText, { color: colors.textMain }]}>
-                                {s.text}
-                              </Text>
-                              {s.distance > 0 && (
-                                <Text style={[styles.stepDist, { color: colors.textMuted }]}>
-                                  {fmtDist(s.distance)}
-                                </Text>
-                              )}
-                            </View>
-                          </View>
-                        ))}
-                      </ScrollView>
-                    )}
-                  </View>
-                )}
-              </>
-            )}
+          <Text style={[styles.topBarText, { color: colors.textMain }]}>Maskanlar xaritasi</Text>
+          <View style={[styles.topBarBadge, { backgroundColor: darkMode ? 'rgba(99,102,241,0.15)' : '#eef2ff' }]}>
+            <Text style={[styles.topBarBadgeText, { color: '#6366f1' }]}>{places.length}</Text>
           </View>
         </View>
       )}
 
-      {/* ══ Pastki karusel ══ */}
-      {hotels.length > 0 && (
+      {/* ── TOP BAR: Route aktiv (manzil + yopish) ── */}
+      {g && (
+        <View
+          style={[
+            styles.topBar,
+            {
+              top: insets.top + 12,
+              backgroundColor: darkMode ? 'rgba(15,23,42,0.88)' : 'rgba(255,255,255,0.92)',
+              borderColor: darkMode ? 'rgba(37,99,235,0.3)' : 'rgba(37,99,235,0.2)',
+            },
+          ]}
+        >
+          <View style={[styles.topBarIconWrap, { backgroundColor: darkMode ? 'rgba(37,99,235,0.25)' : '#dbeafe' }]}>
+            <Feather name="navigation" size={15} color="#2563eb" />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.topBarKicker, { color: '#2563eb' }]}>YO'NALISH</Text>
+            <Text style={[styles.topBarText, { color: colors.textMain }]} numberOfLines={1}>
+              {g.hotel.name}
+            </Text>
+          </View>
+          <Pressable
+            onPress={clearGuidance}
+            hitSlop={10}
+            style={({ pressed }) => [
+              styles.topBarClose,
+              { backgroundColor: pressed ? colors.bgHover : (darkMode ? 'rgba(255,255,255,0.08)' : '#f1f5f9') },
+            ]}
+          >
+            <Feather name="x" size={14} color={colors.textMuted} />
+          </Pressable>
+        </View>
+      )}
+
+      {/* ── LOADING overlay (markazda kichik glass karta) ── */}
+      {g && (g.status === 'locating' || g.status === 'routing') && (
+        <View style={styles.loadingOverlay}>
+          <View
+            style={[
+              styles.loadingCard,
+              {
+                backgroundColor: darkMode ? 'rgba(15,23,42,0.92)' : 'rgba(255,255,255,0.95)',
+                borderColor: darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)',
+              },
+            ]}
+          >
+            <ActivityIndicator size="large" color="#2563eb" />
+            <Text style={[styles.loadingTitle, { color: colors.textMain }]}>
+              {g.status === 'locating' ? 'GPS aniqlanmoqda' : 'Marshrut hisoblanmoqda'}
+            </Text>
+            <Text style={[styles.loadingSub, { color: colors.textMuted }]}>
+              {g.status === 'locating' ? 'Joylashuv kutilmoqda...' : 'Eng qisqa yo\'l topilmoqda...'}
+            </Text>
+          </View>
+        </View>
+      )}
+
+      {/* ── ERROR toast (tepada) ── */}
+      {g && g.status === 'error' && (
+        <View
+          style={[
+            styles.errorToast,
+            {
+              top: insets.top + 80,
+              backgroundColor: darkMode ? 'rgba(30,10,10,0.9)' : 'rgba(255,255,255,0.95)',
+              borderColor: 'rgba(239,68,68,0.3)',
+            },
+          ]}
+        >
+          <Feather name="alert-circle" size={16} color="#ef4444" />
+          <View style={{ flex: 1 }}>
+            <Text style={styles.errorToastTitle}>Xatolik</Text>
+            <Text style={[styles.errorToastText, { color: colors.textMuted }]} numberOfLines={2}>
+              {g.error}
+            </Text>
+          </View>
+          <Pressable onPress={clearGuidance} hitSlop={8}>
+            <Feather name="x" size={14} color={colors.textMuted} />
+          </Pressable>
+        </View>
+      )}
+
+      {/* ── ROUTE STATS STRIP (karusel ustida, faqat ready) ── */}
+      {g && g.status === 'ready' && g.data && (
+        <View
+          style={[
+            styles.routeStrip,
+            {
+              backgroundColor: darkMode ? 'rgba(10,15,35,0.94)' : 'rgba(255,255,255,0.96)',
+              borderColor: darkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)',
+            },
+          ]}
+        >
+          {/* 3 ta stat pill */}
+          <View style={styles.statsRow}>
+            <View style={[styles.statPill, { backgroundColor: darkMode ? 'rgba(37,99,235,0.15)' : '#eff6ff' }]}>
+              <Feather name="map-pin" size={12} color="#2563eb" />
+              <Text style={[styles.statVal, { color: colors.textMain }]}>{fmtDist(g.data.distance)}</Text>
+              <Text style={[styles.statLbl, { color: '#2563eb' }]}>masofa</Text>
+            </View>
+            <View style={[styles.statPill, { backgroundColor: darkMode ? 'rgba(22,163,74,0.15)' : '#f0fdf4' }]}>
+              <Feather name="clock" size={12} color="#16a34a" />
+              <Text style={[styles.statVal, { color: '#16a34a' }]}>{fmtTime(g.data.duration)}</Text>
+              <Text style={[styles.statLbl, { color: '#16a34a' }]}>vaqt</Text>
+            </View>
+            <View style={[styles.statPill, { backgroundColor: darkMode ? 'rgba(245,158,11,0.15)' : '#fffbeb' }]}>
+              <Feather name="corner-up-right" size={12} color="#d97706" />
+              <Text style={[styles.statVal, { color: '#d97706' }]}>{g.data.steps.length}</Text>
+              <Text style={[styles.statLbl, { color: '#d97706' }]}>burilish</Text>
+            </View>
+          </View>
+
+          {/* Keyingi qadam satri */}
+          {g.data.steps.length > 0 && (
+            <View style={[styles.nextStepRow, { borderTopColor: darkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }]}>
+              <View style={[styles.nextStepDot, { backgroundColor: '#2563eb' }]}>
+                {stepIcon(g.data.steps[0], '#fff', 18)}
+              </View>
+              <View style={{ flex: 1, paddingRight: 8 }}>
+                <Text style={[styles.nextStepLabel, { color: '#2563eb' }]}>KEYINGI QADAM</Text>
+                <Text style={[styles.nextStepText, { color: colors.textMain }]} numberOfLines={1}>
+                  {g.data.steps[0].text}
+                </Text>
+              </View>
+              {g.data.steps[0].distance > 0 && (
+                <Text style={[styles.nextStepDist, { color: colors.textMuted }]}>
+                  {fmtDist(g.data.steps[0].distance)}
+                </Text>
+              )}
+            </View>
+          )}
+
+          {/* Bosqichlar accordion */}
+          <Pressable
+            onPress={() => setShowSteps((s) => !s)}
+            style={({ pressed }) => [
+              styles.stepsToggle,
+              {
+                borderTopColor: darkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
+                backgroundColor: pressed ? (darkMode ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)') : 'transparent',
+              },
+            ]}
+          >
+            <View style={styles.stepsToggleLeft}>
+              <Feather name="list" size={13} color={colors.textMuted} />
+              <Text style={[styles.stepsToggleText, { color: colors.textMuted }]}>
+                Barcha bosqichlar ({g.data.steps.length})
+              </Text>
+            </View>
+            <Feather name={showSteps ? 'chevron-up' : 'chevron-down'} size={15} color={colors.textMuted} />
+          </Pressable>
+
+          {showSteps && (
+            <ScrollView
+              style={[styles.stepsList, { borderColor: darkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }]}
+              nestedScrollEnabled
+              showsVerticalScrollIndicator={false}
+            >
+              {g.data.steps.map((s, i) => (
+                <View
+                  key={i}
+                  style={[
+                    styles.stepRow,
+                    { borderTopColor: darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' },
+                  ]}
+                >
+                  <View style={styles.stepNumWrap}>
+                    <Text style={styles.stepNum}>{i + 1}</Text>
+                  </View>
+                  <View style={[styles.stepIconSm, { backgroundColor: darkMode ? 'rgba(255,255,255,0.07)' : '#f8fafc' }]}>
+                    {stepIcon(s, colors.textMuted)}
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.stepText, { color: colors.textMain }]}>{s.text}</Text>
+                    {s.distance > 0 && (
+                      <Text style={[styles.stepDist, { color: colors.textMuted }]}>{fmtDist(s.distance)}</Text>
+                    )}
+                  </View>
+                </View>
+              ))}
+            </ScrollView>
+          )}
+        </View>
+      )}
+
+      {/* ══ Pastki karusel (transparent wrap) ══ */}
+      {places.length > 0 && !g && (
         <View style={styles.carouselWrap}>
           <ScrollView
             ref={carouselRef}
@@ -695,91 +756,92 @@ export default function MapScreen() {
             snapToInterval={CARD_WIDTH + CARD_GAP}
             decelerationRate="fast"
           >
-            {hotels.map((h) => {
-              const active = selectedId === h._id;
-              const isRouting =
-                g?.hotel._id === h._id && (g.status === 'locating' || g.status === 'routing');
+            {places.map((p) => {
+              const active = selectedId === p._id;
+              const isRouting = g?.hotel._id === p._id && (g.status === 'locating' || g.status === 'routing');
+              const isHotel = p.mapType === 'hotel';
+              const accentColor = isHotel ? '#6366f1' : '#d97706';
+
               return (
                 <Pressable
-                  key={h._id}
-                  onPress={() => focusHotel(h._id)}
+                  key={p._id}
+                  onPress={() => focusHotel(p._id)}
                   style={({ pressed }) => [
                     styles.card,
                     {
-                      backgroundColor: colors.bgCard,
-                      borderColor: active ? colors.primary : colors.border,
+                      backgroundColor: darkMode ? 'rgba(15,23,42,0.95)' : 'rgba(255,255,255,0.97)',
+                      borderColor: active ? accentColor : (darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.09)'),
                       borderWidth: active ? 2 : 1,
-                      transform: [{ scale: pressed ? 0.97 : 1 }],
+                      transform: [{ scale: pressed ? 0.97 : active ? 1.02 : 1 }],
                     },
                   ]}
                 >
-                  <Image
-                    source={{ uri: imgSrc(h.image || h.images?.[0]) }}
-                    style={styles.cardImage}
-                    contentFit="cover"
-                    transition={200}
-                  />
+                  {/* Karta tepasida rasm */}
+                  <View style={{ position: 'relative' }}>
+                    <Image
+                      source={{ uri: imgSrc(p.image || p.images?.[0]) }}
+                      style={styles.cardImage}
+                      contentFit="cover"
+                      transition={200}
+                    />
+                    {/* Tur badge */}
+                    <View style={[styles.cardTypeBadge, { backgroundColor: active ? accentColor : 'rgba(0,0,0,0.55)' }]}>
+                      {isHotel
+                        ? <Feather name="home" size={10} color="#fff" />
+                        : <MaterialCommunityIcons name="bank" size={10} color="#fff" />}
+                    </View>
+                    {/* Active indikator (yuqori chiziq) */}
+                    {active && (
+                      <View style={[styles.cardActiveLine, { backgroundColor: accentColor }]} />
+                    )}
+                  </View>
+
                   <View style={styles.cardBody}>
                     <Text style={[styles.cardName, { color: colors.textMain }]} numberOfLines={1}>
-                      {h.name}
+                      {p.name}
                     </Text>
                     <View style={styles.cardMeta}>
-                      <View style={styles.cardLocation}>
-                        <Feather name="map-pin" size={11} color={colors.textMuted} />
-                        <Text
-                          style={[styles.cardCity, { color: colors.textMuted }]}
-                          numberOfLines={1}
-                        >
-                          {h.city}
-                        </Text>
-                      </View>
-                      {typeof h.rating === 'number' && h.rating > 0 && (
+                      <Text style={[styles.cardCity, { color: colors.textMuted }]} numberOfLines={1}>
+                        {p.city || p.district || ''}
+                      </Text>
+                      {typeof p.rating === 'number' && p.rating > 0 && (
                         <View style={styles.cardRating}>
-                          <FontAwesome name="star" size={11} color="#f59e0b" />
-                          <Text style={styles.cardRatingText}>{h.rating.toFixed(1)}</Text>
+                          <FontAwesome name="star" size={10} color="#f59e0b" />
+                          <Text style={styles.cardRatingText}>{p.rating.toFixed(1)}</Text>
                         </View>
                       )}
                     </View>
+
                     <View style={styles.cardActions}>
+                      {/* Batafsil */}
                       <Pressable
-                        onPress={() => router.push(`/hotel/${h._id}`)}
-                        style={({ pressed }) => [
-                          { flex: 1, transform: [{ scale: pressed ? 0.97 : 1 }] },
-                        ]}
+                        onPress={() => router.push(isHotel ? `/hotel/${p._id}` : `/attraction/${p._id}`)}
+                        style={({ pressed }) => [styles.cardDetailBtn, {
+                          backgroundColor: accentColor,
+                          opacity: pressed ? 0.85 : 1,
+                          flex: 1,
+                        }]}
                       >
-                        <LinearGradient
-                          colors={colors.gradientMain}
-                          start={{ x: 0, y: 0 }}
-                          end={{ x: 1, y: 1 }}
-                          style={styles.cardBtn}
-                        >
-                          <Text style={styles.cardBtnText}>Batafsil</Text>
-                          <Feather name="arrow-right" size={12} color="#fff" />
-                        </LinearGradient>
+                        <Text style={styles.cardDetailBtnText}>Ko'rish</Text>
+                        <Feather name="arrow-right" size={11} color="#fff" />
                       </Pressable>
-                      {/* Ilova ichida marshrut chizish */}
+
+                      {/* Marshrut */}
                       <Pressable
-                        onPress={() => drawRoute(h)}
+                        onPress={() => drawRoute(p)}
                         disabled={isRouting}
-                        accessibilityLabel={`${h.name} manziliga marshrut`}
                         style={({ pressed }) => [
                           styles.dirBtn,
                           {
-                            backgroundColor: darkMode ? 'rgba(49,46,129,0.4)' : '#eef2ff',
-                            borderColor: darkMode ? 'rgba(99,102,241,0.35)' : '#c7d2fe',
+                            backgroundColor: darkMode ? 'rgba(255,255,255,0.08)' : '#f8fafc',
+                            borderColor: darkMode ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.1)',
                             transform: [{ scale: pressed ? 0.92 : 1 }],
                           },
                         ]}
                       >
-                        {isRouting ? (
-                          <ActivityIndicator size="small" color={darkMode ? '#818cf8' : '#4f46e5'} />
-                        ) : (
-                          <MaterialCommunityIcons
-                            name="directions"
-                            size={18}
-                            color={darkMode ? '#818cf8' : '#4f46e5'}
-                          />
-                        )}
+                        {isRouting
+                          ? <ActivityIndicator size="small" color={accentColor} />
+                          : <MaterialCommunityIcons name="directions" size={18} color={accentColor} />}
                       </Pressable>
                     </View>
                   </View>
@@ -792,213 +854,244 @@ export default function MapScreen() {
     </View>
   );
 }
-
 const styles = StyleSheet.create({
-  titlePill: {
+  /* ── TOP BAR ── */
+  topBar: {
     position: 'absolute',
     alignSelf: 'center',
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
     borderRadius: 999,
     borderWidth: 1,
+    maxWidth: '92%',
     shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
     shadowOffset: { width: 0, height: 4 },
-    elevation: 4,
+    elevation: 6,
   },
-  titleText: {
-    fontSize: 14,
-    fontFamily: FONT.extrabold,
-  },
-  /* ── Marshrut paneli ── */
-  routePanel: {
-    position: 'absolute',
-    left: 12,
-    right: 12,
-    borderRadius: 16,
-    borderWidth: 1,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOpacity: 0.15,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 8,
-  },
-  routeHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-  },
-  routeHeaderLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    flex: 1,
-  },
-  routeNavIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+  topBarIconWrap: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  routeKicker: {
-    fontSize: 10,
+  topBarText: {
+    fontSize: 13,
+    fontFamily: FONT.extrabold,
+    flex: 1,
+    marginRight: 4,
+  },
+  topBarKicker: {
+    fontSize: 9,
     fontFamily: FONT.semibold,
     letterSpacing: 1.2,
   },
-  routeHotelName: {
-    fontSize: 15,
+  topBarBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 999,
+  },
+  topBarBadgeText: {
+    fontSize: 11,
+    fontFamily: FONT.black,
+  },
+  topBarClose: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  /* ── LOADING overlay ── */
+  loadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: 'center',
+    justifyContent: 'center',
+    pointerEvents: 'none',
+  },
+  loadingCard: {
+    borderRadius: 20,
+    borderWidth: 1,
+    paddingVertical: 28,
+    paddingHorizontal: 32,
+    alignItems: 'center',
+    gap: 12,
+    shadowColor: '#000',
+    shadowOpacity: 0.18,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 10,
+  },
+  loadingTitle: {
+    fontSize: 16,
     fontFamily: FONT.bold,
   },
-  routeClose: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  routeBody: {
-    padding: 12,
-    gap: 12,
-  },
-  routeLoading: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 12,
-  },
-  routeLoadingText: {
-    fontSize: 14,
-    fontFamily: FONT.semibold,
-    color: '#2563eb',
-  },
-  routeError: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    padding: 12,
-    borderRadius: 8,
-    backgroundColor: 'rgba(239,68,68,0.08)',
-    borderWidth: 1,
-    borderColor: 'rgba(239,68,68,0.2)',
-  },
-  routeErrorText: {
-    flex: 1,
-    fontSize: 13,
+  loadingSub: {
+    fontSize: 12,
     fontFamily: FONT.medium,
+  },
+
+  /* ── ERROR toast ── */
+  errorToast: {
+    position: 'absolute',
+    left: 16,
+    right: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    padding: 14,
+    borderRadius: 16,
+    borderWidth: 1,
+    shadowColor: '#000',
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 6,
+  },
+  errorToastTitle: {
+    fontSize: 13,
+    fontFamily: FONT.bold,
     color: '#ef4444',
   },
-  routeStats: {
+  errorToastText: {
+    fontSize: 12,
+    fontFamily: FONT.medium,
+    marginTop: 1,
+  },
+
+  /* ── ROUTE STATS STRIP ── */
+  routeStrip: {
+    position: 'absolute',
+    left: 12,
+    right: 12,
+    bottom: 16,
+    borderRadius: 24,
+    borderWidth: 1,
+    paddingTop: 16,
+    paddingHorizontal: 14,
+    paddingBottom: 10,
+    shadowColor: '#000',
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 10,
+  },
+  statsRow: {
     flexDirection: 'row',
+    gap: 8,
+    marginBottom: 14,
+  },
+  statPill: {
+    flex: 1,
     alignItems: 'center',
-    justifyContent: 'space-between',
+    gap: 3,
+    paddingVertical: 10,
+    borderRadius: 14,
   },
-  routeStatsLeft: {
-    flexDirection: 'row',
-    gap: 16,
+  statVal: {
+    fontSize: 15,
+    fontFamily: FONT.black,
   },
-  routeStatLabelRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    marginBottom: 2,
-  },
-  routeStatLabel: {
-    fontSize: 10,
+  statLbl: {
+    fontSize: 9,
     fontFamily: FONT.semibold,
     letterSpacing: 0.5,
   },
-  routeStatValue: {
-    fontSize: 17,
-    fontFamily: FONT.bold,
-  },
-  routeStatDivider: {
-    width: 1,
-    alignSelf: 'stretch',
-  },
-  routeExternal: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  stepsBox: {
-    borderRadius: 12,
-    borderWidth: 1,
-    overflow: 'hidden',
-  },
-  nextStep: {
+  nextStepRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
+    paddingTop: 14,
+    paddingBottom: 10,
+    borderTopWidth: 1,
   },
-  stepIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+  nextStepDot: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    shadowOffset: { width: 0, height: 1 },
-    elevation: 1,
+  },
+  nextStepLabel: {
+    fontSize: 9,
+    fontFamily: FONT.semibold,
+    letterSpacing: 1.2,
+    marginBottom: 2,
   },
   nextStepText: {
     fontSize: 14,
+    fontFamily: FONT.bold,
+  },
+  nextStepDist: {
+    fontSize: 13,
     fontFamily: FONT.bold,
   },
   stepsToggle: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 14,
-    paddingVertical: 10,
+    paddingVertical: 9,
+    borderTopWidth: 1,
+  },
+  stepsToggleLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
   },
   stepsToggleText: {
     fontSize: 12,
-    fontFamily: FONT.bold,
+    fontFamily: FONT.semibold,
   },
   stepsList: {
-    maxHeight: 200,
+    maxHeight: 180,
+    borderTopWidth: 1,
+    marginBottom: 4,
   },
   stepRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
+    gap: 10,
+    paddingHorizontal: 4,
+    paddingVertical: 9,
     borderTopWidth: 1,
   },
-  stepIconSm: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+  stepNumWrap: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: 'rgba(99,102,241,0.12)',
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 2,
   },
+  stepNum: {
+    fontSize: 9,
+    fontFamily: FONT.black,
+    color: '#6366f1',
+  },
+  stepIconSm: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 1,
+  },
   stepText: {
-    fontSize: 13,
+    fontSize: 12,
     fontFamily: FONT.medium,
-    lineHeight: 18,
+    lineHeight: 17,
   },
   stepDist: {
-    fontSize: 11,
+    fontSize: 10,
     fontFamily: FONT.regular,
-    marginTop: 2,
+    marginTop: 1,
   },
   /* ── Karusel ── */
   carouselWrap: {
@@ -1024,31 +1117,45 @@ const styles = StyleSheet.create({
   },
   cardImage: {
     width: '100%',
-    height: 88,
+    height: 96,
+  },
+  cardTypeBadge: {
+    position: 'absolute',
+    top: 8,
+    left: 8,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cardActiveLine: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 3,
+    borderTopLeftRadius: 18,
+    borderTopRightRadius: 18,
   },
   cardBody: {
     padding: 10,
   },
   cardName: {
-    fontSize: 14,
+    fontSize: 13,
     fontFamily: FONT.bold,
-    marginBottom: 4,
+    marginBottom: 3,
   },
   cardMeta: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-  },
-  cardLocation: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    flex: 1,
+    marginBottom: 8,
   },
   cardCity: {
     fontSize: 11,
     fontFamily: FONT.medium,
-    flexShrink: 1,
+    flex: 1,
   },
   cardRating: {
     flexDirection: 'row',
@@ -1064,8 +1171,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    marginTop: 8,
   },
+  cardDetailBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 5,
+    paddingVertical: 7,
+    borderRadius: 10,
+  },
+  cardDetailBtnText: {
+    color: '#fff',
+    fontSize: 12,
+    fontFamily: FONT.bold,
+  },
+  /* keep old ones for compat */
   cardBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1082,7 +1202,7 @@ const styles = StyleSheet.create({
   dirBtn: {
     width: 34,
     height: 34,
-    borderRadius: 12,
+    borderRadius: 10,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
@@ -1092,3 +1212,4 @@ const styles = StyleSheet.create({
     fontFamily: FONT.semibold,
   },
 });
+

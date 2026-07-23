@@ -2,7 +2,7 @@
  * AttractionCard.tsx — tarixiy joy kartasi (web `AttractionCard.jsx` porti).
  * Amber "Tarixiy joy" badge, 360° belgisi, tuman + reyting, amber gradient CTA.
  */
-import React, { memo } from 'react';
+import React, { memo, useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -27,6 +27,21 @@ export const AttractionCard = memo(function AttractionCard({ attraction: a }: At
   const hasVideo = !!a.video360?.url;
   const accCount = a.accessibility ? Object.values(a.accessibility).filter(Boolean).length : 0;
 
+  // Rasm slideshow — har 1 soniyada keyingisiga o'tadi
+  const images = (a.images && a.images.length > 0)
+    ? a.images.map((img) => imgSrc(img, FALLBACK_ATTRACTION_IMAGE))
+    : [FALLBACK_ATTRACTION_IMAGE];
+  const [imgIdx, setImgIdx] = useState(0);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    if (images.length <= 1) return;
+    intervalRef.current = setInterval(() => {
+      setImgIdx((prev) => (prev + 1) % images.length);
+    }, 3000);
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
+  }, [images.length]);
+
   return (
     // Mobilda butun karta bosiladi (CTA tugma ham alohida ishlayveradi)
     <Pressable
@@ -45,10 +60,10 @@ export const AttractionCard = memo(function AttractionCard({ attraction: a }: At
       <View style={styles.imageWrap}>
         <Shimmer style={StyleSheet.absoluteFill} borderRadius={0} />
         <Image
-          source={{ uri: imgSrc(a.images?.[0], FALLBACK_ATTRACTION_IMAGE) }}
+          source={{ uri: images[imgIdx] }}
           style={StyleSheet.absoluteFill}
           contentFit="cover"
-          transition={200}
+          transition={400}
           accessibilityLabel={name}
         />
         <LinearGradient
@@ -84,6 +99,21 @@ export const AttractionCard = memo(function AttractionCard({ attraction: a }: At
             </View>
           )}
         </View>
+
+        {/* Dot indikatorlar */}
+        {images.length > 1 && (
+          <View style={styles.dotsRow}>
+            {images.map((_, i) => (
+              <View
+                key={i}
+                style={[
+                  styles.dot,
+                  i === imgIdx && styles.dotActive,
+                ]}
+              />
+            ))}
+          </View>
+        )}
       </View>
 
       {/* ── Kontent ── */}
@@ -125,7 +155,7 @@ export const AttractionCard = memo(function AttractionCard({ attraction: a }: At
               end={{ x: 1, y: 1 }}
               style={styles.ctaButton}
             >
-              <Text style={styles.ctaText}>360° ko'rish va atrofi</Text>
+              <Text style={styles.ctaText}>Batafsil ko'rish</Text>
               <Feather name="arrow-right" size={16} color="#fff" />
             </LinearGradient>
           </Pressable>
@@ -137,14 +167,14 @@ export const AttractionCard = memo(function AttractionCard({ attraction: a }: At
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 20,
+    borderRadius: 24,
     borderWidth: 1,
     overflow: 'hidden',
     shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 2,
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 3,
   },
   imageWrap: {
     aspectRatio: 4 / 3,
@@ -184,12 +214,32 @@ const styles = StyleSheet.create({
   },
   bottomRow: {
     position: 'absolute',
-    bottom: 10,
+    bottom: 28,
     left: 10,
     right: 10,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+  },
+  dotsRow: {
+    position: 'absolute',
+    bottom: 8,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 5,
+  },
+  dot: {
+    width: 5,
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: 'rgba(255,255,255,0.4)',
+  },
+  dotActive: {
+    width: 14,
+    backgroundColor: '#fff',
   },
   darkPill: {
     flexDirection: 'row',
@@ -214,12 +264,12 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    padding: rs(16),
+    padding: rs(20),
   },
   name: {
-    fontSize: rs(17),
+    fontSize: rs(19),
     fontFamily: FONT.extrabold,
-    marginBottom: 4,
+    marginBottom: 6,
   },
   descShort: {
     fontSize: rs(13),
@@ -272,8 +322,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    minHeight: rs(50),
-    borderRadius: 14,
+    minHeight: rs(54),
+    borderRadius: 16,
     shadowColor: '#d97706',
     shadowOpacity: 0.4,
     shadowRadius: 14,
@@ -282,7 +332,7 @@ const styles = StyleSheet.create({
   },
   ctaText: {
     color: '#fff',
-    fontSize: rs(15),
+    fontSize: rs(16),
     fontFamily: FONT.bold,
   },
 });

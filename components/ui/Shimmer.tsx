@@ -3,7 +3,7 @@
  * Web `.shimmer` CSS animatsiyasining RN Animated ekvivalenti.
  */
 import React, { useEffect, useRef } from 'react';
-import { Animated, Easing, StyleSheet, type ViewStyle, type StyleProp } from 'react-native';
+import { Animated, Easing, Platform, StyleSheet, type ViewStyle, type StyleProp } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '@/hooks/useTheme';
 
@@ -22,7 +22,7 @@ export function Shimmer({ style, borderRadius = 12 }: ShimmerProps) {
         toValue: 1,
         duration: 1600,
         easing: Easing.linear,
-        useNativeDriver: true,
+        useNativeDriver: Platform.OS !== 'web',
       }),
     );
     loop.start();
